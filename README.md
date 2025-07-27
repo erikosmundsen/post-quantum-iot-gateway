@@ -21,3 +21,11 @@ It secures communication using MQTT protocol and TLS 1.3, implemented on a RAspb
 | Component           | Purpose                           |
 |---------------------|-----------------------------------|
 | FPGA Board          | Hardware acceleration (optional)  |
+
+## Diagrams & Schematics
+
+### System Block Diagram:
+![Block Diagram](diagrams/block-diagram.png)
+
+### Raspberry Pi and Sensor Schematic:
+![Hardware Schematic](schematics/raspberrypi-dht11.png)
