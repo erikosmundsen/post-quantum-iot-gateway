@@ -26,8 +26,10 @@ It secures communication using MQTT protocol and TLS 1.3, implemented on a RAspb
 
 ### System Block Diagram:
 ![Block Diagram](diagrams/block-diagram.png)
+
 This diagram shows the data flow from the sensor (DHT11) through the Raspberry Pi acting as an IoT Gateway. It highlights the use of Mosquitto MQTT Broker with TLS 1.3 and post-quantum cryptography (Kyber/Dilithium) to enable secure data transmission.
 
 ### Raspberry Pi and Sensor Schematic:
 ![Hardware Schematic](schematics/raspberrypi-dht11.png)
+
 The schematic details how the DHT11 sensor connects to the Raspberry Pi, including the required 10k pull-up resistor on the DATA line to 3.3V.
