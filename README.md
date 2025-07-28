@@ -72,13 +72,17 @@ This checklist includes:
 ## Repository Structure
 
 ```plaintext
-post-quantum-iot-gateway/
 ├── diagrams/
-│   ├── block-diagram.png
+│   └── block-diagram.png
+├── documentation/
+│   ├── .gitkeep
+│   ├── demo_checklist.md
+│   └── technologies_explained.md
 ├── hardware/
-│   └── BOM.md
+│   ├── BOM.md
 │   └── schematics/
 │       └── raspberrypi-dht11.png
 ├── software/
-├── documentation/
-├── README.md
+│   └── .gitkeep
+├── .gitignore
+└── README.md
