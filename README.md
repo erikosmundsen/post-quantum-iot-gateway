@@ -45,6 +45,10 @@ This schematic shows how to connect the DHT11 sensor to the Raspberry Pi, includ
 
 See: [`diagrams/schematic.png`](diagrams/schematic.png)
 
+## Documentation
+
+- [Technologies Explained](documentation/technologies_explained.md): Simple guide on MQTT, TLS 1.3, Mosquitto, and post-quantum crypto.
+
 ---
 
 ## Project Status
