@@ -49,6 +49,14 @@ See: [`diagrams/schematic.png`](diagrams/schematic.png)
 
 - [Technologies Explained](documentation/technologies_explained.md): Simple guide on MQTT, TLS 1.3, Mosquitto, and post-quantum crypto.
 
+- [Demo Video Checklist](documentation/demo_checklist.md)
+
+This checklist includes:
+- Video storyboard requirements
+- Team roles and responsibilities
+- Required content and hardware footage
+- Visual and narration guidelines
+
 ---
 
 ## Project Status
