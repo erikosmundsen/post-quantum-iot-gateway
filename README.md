@@ -63,7 +63,6 @@ See: [`diagrams/schematic.png`](diagrams/schematic.png)
 post-quantum-iot-gateway/
 ├── diagrams/
 │   ├── block-diagram.png
-│   └── schematic.png
 ├── hardware/
 │   └── BOM.md
 │   └── schematics/
@@ -71,4 +70,3 @@ post-quantum-iot-gateway/
 ├── software/
 ├── documentation/
 ├── README.md
-├── .gitignore
