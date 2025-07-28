@@ -1,104 +1,71 @@
 # Post-Quantum Secure IoT Gateway
 
-## Project Description
+## Project Overview
 
-This project demonstrates a secure IoT gateway that uses Post-Quantum Cryptography (PQC) to protect data communication. It includes:
+This project demonstrates an early-stage prototype of a secure IoT gateway built using a Raspberry Pi 4. It reads data from a DHT11 temperature and humidity sensor and transmits that data using MQTT (Message Queuing Telemetry Transport). The final goal is to secure this communication using **TLS 1.3** and **Post-Quantum Cryptography** (Kyber and Dilithium via liboqs/OpenSSL).
 
-- A DHT11 sensor for temperature and humidity monitoring
-- The Mosquitto MQTT Broker for messaging
-- TLS 1.3 for transport-layer encryption
-- Kyber and Dilithium for post-quantum secure key exchange and signatures
-- All implemented on a Raspberry Pi 4
-
-The gateway encrypts sensor data and publishes it securely to subscribed clients over MQTT.
+This version of the project includes a working sensor-to-MQTT pipeline.  
+TLS and Post-Quantum integration are planned for the next phase.
 
 ---
 
-## Hardware Components
+## Hardware Used
 
-| Component        | Description                             | Quantity |
-|------------------|-----------------------------------------|----------|
-| Raspberry Pi 4   | Main IoT Gateway controller              | 1        |
-| MicroSD Card     | RPi OS Storage (16GB or higher)          | 1        |
-| Power Supply     | 5V 3A USB-C Power for Pi                 | 1        |
-| Breadboard       | For prototyping and sensor connection    | 1        |
-| Jumper Wires     | M-to-M connections                       | Assorted |
-| DHT11 Sensor     | Temperature and humidity sensor          | 1        |
-| 10kΩ Resistor    | Pull-up resistor for DHT11 data line     | 1        |
-| Ethernet Cable   | Optional (Wi-Fi also supported)          | 1        |
+| Component        | Description                             |
+|------------------|-----------------------------------------|
+| Raspberry Pi 4   | Main controller for the IoT gateway     |
+| DHT11 Sensor     | Temperature and humidity sensor         |
+| Breadboard       | For prototyping the circuit             |
+| Jumper Wires     | For making GPIO connections             |
+| 10kΩ Resistor    | Pull-up resistor on DHT11 data line     |
+| MicroSD Card     | Storage for Raspberry Pi OS             |
+| Power Supply     | 5V 3A USB-C power for the Raspberry Pi  |
 
-See [`hardware/BOM.md`](hardware/BOM.md) for purchase links and prices.
-
----
-
-## Diagrams and Schematics
-
-### Block Diagram
-
-This diagram shows the flow of data from the DHT11 sensor to the Raspberry Pi IoT gateway, through the MQTT broker secured with TLS 1.3 and post-quantum cryptography.
-
-See: [`diagrams/block-diagram.png`](diagrams/block-diagram.png)
-
-### Wiring Schematic
-
-This schematic shows how to connect the DHT11 sensor to the Raspberry Pi, including the 10kΩ pull-up resistor on the data line.
-
-See: [`diagrams/schematic.png`](diagrams/schematic.png)
-
-## Software
-
-### dht11_reader.py
-
-This script runs on the Raspberry Pi and reads data from the DHT11 temperature and humidity sensor using GPIO4.
-
-#### Requirements:
-- Raspberry Pi OS
-- Python 3
-- Adafruit_DHT Library (`pip3 install Adafruit_DHT`)
-
-#### Usage:
-```bash
-python3 dht11_reader.py
-```
-
-## Documentation
-
-- [Technologies Explained](documentation/technologies_explained.md): Simple guide on MQTT, TLS 1.3, Mosquitto, and post-quantum crypto.
-
-- [Demo Video Checklist](documentation/demo_checklist.md)
-
-This checklist includes:
-- Video storyboard requirements
-- Team roles and responsibilities
-- Required content and hardware footage
-- Visual and narration guidelines
+See the full Bill of Materials here: [`hardware/BOM.md`](hardware/BOM.md)
 
 ---
 
-## Project Status
+## Demo Summary
 
-- Block diagram completed  
-- Schematic completed  
-- Hardware staged  
-- DHT11 sensor pending arrival  
-- Software configuration in progress  
+This demo shows a basic working system with:
+
+- Sensor data collected using the DHT11 connected to the Raspberry Pi GPIO
+- Real-time data publishing over MQTT using the Mosquitto broker (localhost)
+- Two-terminal output: one for sensor publishing, one for MQTT subscription
+- Python scripts written and documented for ease of use
+
+In future stages, we will secure MQTT using TLS 1.3 and add post-quantum security using Kyber/Dilithium via `liboqs`.
+
+---
+
+## How It Works (Demo Version)
+
+1. The DHT11 sensor is connected to GPIO4 on the Raspberry Pi.
+2. A Python script (`publish_dht11_mqtt.py`) reads the sensor values.
+3. The values are published to a local Mosquitto MQTT broker on the topic `sensor/data`.
+4. A second terminal listens to that topic using `mosquitto_sub`.
+
+Detailed setup and usage instructions are available here:  
+[`documentation/setup_instructions.md`](documentation/setup_instructions.md)
 
 ---
 
 ## Repository Structure
 
 ```plaintext
-├── diagrams/
+post-quantum-iot-gateway/
+├── diagrams/                   # Block diagram and schematic
 │   └── block-diagram.png
-├── documentation/
-│   ├── .gitkeep
-│   ├── demo_checklist.md
-│   └── technologies_explained.md
-├── hardware/
+├── documentation/              # Setup guide and demo checklist
+│   ├── setup_instructions.md
+│   └── demo_checklist.md
+├── hardware/                   # BOM and schematics
 │   ├── BOM.md
 │   └── schematics/
 │       └── raspberrypi-dht11.png
-├── software/
-│   └── .gitkeep
+├── software/                   # Python scripts
+│   ├── dht11_reader.py
+│   └── publish_dht11_mqtt.py
+├── requirements.txt            # Python dependencies
 ├── .gitignore
-└── README.md
+└── README.md                   # You're here!
