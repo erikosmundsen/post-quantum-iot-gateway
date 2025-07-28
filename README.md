@@ -18,7 +18,7 @@ The goal is to create a lightweight but secure platform that demonstrates how PQ
 In short: Arduino reads data -> sends it to Pi -> Pi brokers it over secure MQTT -> API + GUI expose and display it.
 =======
 ---
-## 🧰 Project Setup on Raspberry Pi (with Virtual Environment)
+## Project Setup on Raspberry Pi (with Virtual Environment)
 
 Follow these steps directly on the Raspberry Pi to set up the environment for the Post-Quantum Secure IoT Gateway:
 
