@@ -45,6 +45,22 @@ This schematic shows how to connect the DHT11 sensor to the Raspberry Pi, includ
 
 See: [`diagrams/schematic.png`](diagrams/schematic.png)
 
+## Software
+
+### dht11_reader.py
+
+This script runs on the Raspberry Pi and reads data from the DHT11 temperature and humidity sensor using GPIO4.
+
+#### Requirements:
+- Raspberry Pi OS
+- Python 3
+- Adafruit_DHT Library (`pip3 install Adafruit_DHT`)
+
+#### Usage:
+```bash
+python3 dht11_reader.py
+```
+
 ## Documentation
 
 - [Technologies Explained](documentation/technologies_explained.md): Simple guide on MQTT, TLS 1.3, Mosquitto, and post-quantum crypto.
