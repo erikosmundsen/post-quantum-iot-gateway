@@ -1,35 +1,74 @@
 # Post-Quantum Secure IoT Gateway
 
 ## Project Description
-This project demonstrates a secure IoT gateway using Post-Quantum Cryptography.
-It secures communication using MQTT protocol and TLS 1.3, implemented on a RAspberry Pi
+
+This project demonstrates a secure IoT gateway that uses Post-Quantum Cryptography (PQC) to protect data communication. It includes:
+
+- A DHT11 sensor for temperature and humidity monitoring
+- The Mosquitto MQTT Broker for messaging
+- TLS 1.3 for transport-layer encryption
+- Kyber and Dilithium for post-quantum secure key exchange and signatures
+- All implemented on a Raspberry Pi 4
+
+The gateway encrypts sensor data and publishes it securely to subscribed clients over MQTT.
+
+---
 
 ## Hardware Components
 
-| Component           | Purpose                       | Quantity    |
-|---------------------|-------------------------------|-------------|
-| Raspberry Pi 4      | Main IoT Gateway controller   | 1           |
-| MicroSD Card        | Raspberry Pi OS Storage       | 1 (16GB+)   |
-| Power Supply        | Power Raspberry Pi            | 1 (5V, 3A)  |
-| Breadboard          | Prototyping Connections       | 1           |
-| Jumper wires        | Connections                   | Assorted    |
-| DHT11 sensor        | Temperature & Humidity sensor | 1           |
-| Ethernet cable      | Network connection            | 1 (optional Wi-Fi) |
+| Component        | Description                             | Quantity |
+|------------------|-----------------------------------------|----------|
+| Raspberry Pi 4   | Main IoT Gateway controller              | 1        |
+| MicroSD Card     | RPi OS Storage (16GB or higher)          | 1        |
+| Power Supply     | 5V 3A USB-C Power for Pi                 | 1        |
+| Breadboard       | For prototyping and sensor connection    | 1        |
+| Jumper Wires     | M-to-M connections                       | Assorted |
+| DHT11 Sensor     | Temperature and humidity sensor          | 1        |
+| 10kΩ Resistor    | Pull-up resistor for DHT11 data line     | 1        |
+| Ethernet Cable   | Optional (Wi-Fi also supported)          | 1        |
 
-## Optional Components (Future Implementation)
+See [`hardware/BOM.md`](hardware/BOM.md) for purchase links and prices.
 
-| Component           | Purpose                           |
-|---------------------|-----------------------------------|
-| FPGA Board          | Hardware acceleration (optional)  |
+---
 
-## Diagrams & Schematics
+## Diagrams and Schematics
 
-### System Block Diagram:
-![Block Diagram](diagrams/block-diagram.png)
+### Block Diagram
 
-This diagram shows the data flow from the sensor (DHT11) through the Raspberry Pi acting as an IoT Gateway. It highlights the use of Mosquitto MQTT Broker with TLS 1.3 and post-quantum cryptography (Kyber/Dilithium) to enable secure data transmission.
+This diagram shows the flow of data from the DHT11 sensor to the Raspberry Pi IoT gateway, through the MQTT broker secured with TLS 1.3 and post-quantum cryptography.
 
-### Raspberry Pi and Sensor Schematic:
-![Hardware Schematic](schematics/raspberrypi-dht11.png)
+See: [`diagrams/block-diagram.png`](diagrams/block-diagram.png)
 
-The schematic details how the DHT11 sensor connects to the Raspberry Pi, including the required 10k pull-up resistor on the DATA line to 3.3V.
+### Wiring Schematic
+
+This schematic shows how to connect the DHT11 sensor to the Raspberry Pi, including the 10kΩ pull-up resistor on the data line.
+
+See: [`diagrams/schematic.png`](diagrams/schematic.png)
+
+---
+
+## Project Status
+
+- Block diagram completed  
+- Schematic completed  
+- Hardware staged  
+- DHT11 sensor pending arrival  
+- Software configuration in progress  
+
+---
+
+## Repository Structure
+
+```plaintext
+post-quantum-iot-gateway/
+├── diagrams/
+│   ├── block-diagram.png
+│   └── schematic.png
+├── hardware/
+│   └── BOM.md
+│   └── schematics/
+│       └── raspberrypi-dht11.png
+├── software/
+├── documentation/
+├── README.md
+├── .gitignore
