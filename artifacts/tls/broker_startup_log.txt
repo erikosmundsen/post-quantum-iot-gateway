@@ -1,0 +1,36 @@
+-- Journal begins at Mon 2022-04-04 08:44:56 EDT, ends at Mon 2025-10-06 17:42:36 EDT. --
+Jul 28 11:14:32 raspberrypi systemd[1]: Starting Mosquitto MQTT Broker...
+Jul 28 11:14:32 raspberrypi systemd[1]: Started Mosquitto MQTT Broker.
+Jul 28 11:40:14 raspberrypi systemd[1]: Stopping Mosquitto MQTT Broker...
+Jul 28 11:40:14 raspberrypi systemd[1]: mosquitto.service: Succeeded.
+Jul 28 11:40:14 raspberrypi systemd[1]: Stopped Mosquitto MQTT Broker.
+-- Boot d2b9eea434314c9aa2c424669a37f125 --
+Jul 28 11:40:23 raspberrypi systemd[1]: Starting Mosquitto MQTT Broker...
+Jul 28 11:40:24 raspberrypi systemd[1]: Started Mosquitto MQTT Broker.
+Jul 28 19:19:22 raspberrypi systemd[1]: Stopping Mosquitto MQTT Broker...
+Jul 28 19:19:22 raspberrypi systemd[1]: mosquitto.service: Succeeded.
+Jul 28 19:19:22 raspberrypi systemd[1]: Stopped Mosquitto MQTT Broker.
+Jul 28 19:19:22 raspberrypi systemd[1]: mosquitto.service: Consumed 18.652s CPU time.
+-- Boot 185567f478a24b6cb03963f2c1404e98 --
+Jul 28 19:19:31 raspberrypi systemd[1]: Starting Mosquitto MQTT Broker...
+Jul 28 19:19:32 raspberrypi systemd[1]: Started Mosquitto MQTT Broker.
+Jul 29 21:22:49 raspberrypi systemd[1]: Stopping Mosquitto MQTT Broker...
+Jul 29 21:22:49 raspberrypi systemd[1]: mosquitto.service: Succeeded.
+Jul 29 21:22:49 raspberrypi systemd[1]: Stopped Mosquitto MQTT Broker.
+Jul 29 21:22:49 raspberrypi systemd[1]: mosquitto.service: Consumed 12.598s CPU time.
+-- Boot d42fc01daa4548bd8161b1ed0b835b1d --
+Jul 29 21:22:58 raspberrypi systemd[1]: Starting Mosquitto MQTT Broker...
+Jul 29 21:22:59 raspberrypi systemd[1]: Started Mosquitto MQTT Broker.
+-- Boot 0fdcea7788de4fde9a581be54c6bc48c --
+Sep 26 08:17:10 raspberrypi systemd[1]: Starting Mosquitto MQTT Broker...
+Sep 26 08:17:11 raspberrypi systemd[1]: Started Mosquitto MQTT Broker.
+-- Boot 50a1e56094ce4e308f6307e0ae197ff4 --
+Sep 26 09:51:06 raspberrypi systemd[1]: Starting Mosquitto MQTT Broker...
+Sep 26 09:51:07 raspberrypi systemd[1]: Started Mosquitto MQTT Broker.
+Oct 06 17:15:54 raspberrypi systemd[1]: Stopping Mosquitto MQTT Broker...
+Oct 06 17:15:54 raspberrypi systemd[1]: mosquitto.service: Succeeded.
+Oct 06 17:15:54 raspberrypi systemd[1]: Stopped Mosquitto MQTT Broker.
+Oct 06 17:15:54 raspberrypi systemd[1]: mosquitto.service: Consumed 6.057s CPU time.
+Oct 06 17:15:54 raspberrypi systemd[1]: Starting Mosquitto MQTT Broker...
+Oct 06 17:15:54 raspberrypi mosquitto[4920]: 1759785354: Loading config file /etc/mosquitto/conf.d/secure.conf
+Oct 06 17:15:54 raspberrypi systemd[1]: Started Mosquitto MQTT Broker.
