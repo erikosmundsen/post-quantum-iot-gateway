@@ -205,3 +205,15 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Python virtual environments
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# Security: never commit private keys or certificate serial files
+**/*.key
+**/*.srl
+security/*.key
+security/*.srl
