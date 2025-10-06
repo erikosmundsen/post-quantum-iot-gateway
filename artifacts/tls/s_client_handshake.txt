@@ -1,0 +1,59 @@
+CONNECTED(00000003)
+---
+Certificate chain
+ 0 s:C = US, ST = Florida, L = Titusville, O = Erik Osmundsen Labs, OU = Server, CN = localhost
+   i:C = US, ST = Florida, L = Titusville, O = Erik Osmundsen Labs, OU = IoT, CN = ErikOsmundsen-CA
+ 1 s:C = US, ST = Florida, L = Titusville, O = Erik Osmundsen Labs, OU = IoT, CN = ErikOsmundsen-CA
+   i:C = US, ST = Florida, L = Titusville, O = Erik Osmundsen Labs, OU = IoT, CN = ErikOsmundsen-CA
+---
+Server certificate
+-----BEGIN CERTIFICATE-----
+MIIEeTCCAmECFFYizMcCo08xy6lhRJFv0zIOSbUpMA0GCSqGSIb3DQEBCwUAMHsx
+CzAJBgNVBAYTAlVTMRAwDgYDVQQIDAdGbG9yaWRhMRMwEQYDVQQHDApUaXR1c3Zp
+bGxlMRwwGgYDVQQKDBNFcmlrIE9zbXVuZHNlbiBMYWJzMQwwCgYDVQQLDANJb1Qx
+GTAXBgNVBAMMEEVyaWtPc211bmRzZW4tQ0EwHhcNMjUxMDA2MjEwNzQyWhcNMjgw
+MTA5MjEwNzQyWjB3MQswCQYDVQQGEwJVUzEQMA4GA1UECAwHRmxvcmlkYTETMBEG
+A1UEBwwKVGl0dXN2aWxsZTEcMBoGA1UECgwTRXJpayBPc211bmRzZW4gTGFiczEP
+MA0GA1UECwwGU2VydmVyMRIwEAYDVQQDDAlsb2NhbGhvc3QwggEiMA0GCSqGSIb3
+DQEBAQUAA4IBDwAwggEKAoIBAQDCd+72gtzIl0XTT/hIwMgzBlhigrDiwZm1L8py
+Ozzpbn/jSGp1Hp9oxGDytFKOQAlWuQoDaaQkYXppMCkvF1Af3xWv8najTloROSP4
+KSUuAzjqF+zpFaQSBLVHlGWCltXEoRYJxK/w+TkNwTC1u1b84T2D7+yYaC01KM8w
+HacBaxWsJLY8xeyLE7It9Km8PvGPORprIHqFWsRqzKvZmB3GAt6Po4GdxVf4Awg2
+QIOOrwXATaEH6e6mIOhuE0cQb/CMX49QCMxooX4VnOULPo3BdkGPbj57q2WT/Wmg
+mIgB0d/S3AQwmwa5Y5FSj/KBpH+wcknJc8v/UpJ5FW2q3SsjAgMBAAEwDQYJKoZI
+hvcNAQELBQADggIBAAHG8Q3BQ+4+qcB0lY5NViPHv3jTu362Aof7btX0G2nbG0Rr
++rkyiKgtjqWgTRW4zc2njM8bBNtYGRuERlUpnauv231wxDyyD/CbIfbzZcBW5wb3
+W3Ibc+u7Ab8a2ujHAqYaDTvwmLYh3bgngq9jzy0TlHXcyMMrz1qglx4TIdAy74Bi
+xLXqOOBJqysyt6VlmY9SxU/Tj+oe2ezrG/87NAXojYbq6NkOtd9HVAQoufjwcWb+
+Y94h16DCfF9q3OOUu5bM2TSzzD9fTQizB8xLTJKk2UG2KPBC2Fq3X5h34Vux2lvF
+iy3u74AMwAIATkShuVRB6lqEdkdR3X+QdjvI/h3UZWpxeoWAya3RdJs96Miyh2DI
+/XhqlQMBUye7+8UFcQjoPBDMmQ6g4uXoFK88fItH04hIkN3J718JNnqwEFNdMQ0r
+thtuC98FsTd3vuwT2IOD/q1NgCE4QEosTTKzl7I0tfXt8aGJTlPw+O3ABVsjVTzC
+ux2QE28f/awtbmpc819zct8JY00F9xxEJEn5luPFvwdl2rhl9EHR5oRGg849BOew
+UjztF/8qaKd1h+aTcohjTCIfkLBCsqmZ5P5sUPlWX9RitfNW+8n6s1h6YKIPiWT6
+SXGMD1mEYLQN6xKsKZmFozqOm7hKbHU1CPHu27Tipim3GVu0UWNZlpjgJB4s
+-----END CERTIFICATE-----
+subject=C = US, ST = Florida, L = Titusville, O = Erik Osmundsen Labs, OU = Server, CN = localhost
+
+issuer=C = US, ST = Florida, L = Titusville, O = Erik Osmundsen Labs, OU = IoT, CN = ErikOsmundsen-CA
+
+---
+No client certificate CA names sent
+Requested Signature Algorithms: ECDSA+SHA256:ECDSA+SHA384:ECDSA+SHA512:Ed25519:Ed448:RSA-PSS+SHA256:RSA-PSS+SHA384:RSA-PSS+SHA512:RSA-PSS+SHA256:RSA-PSS+SHA384:RSA-PSS+SHA512:RSA+SHA256:RSA+SHA384:RSA+SHA512:ECDSA+SHA224:RSA+SHA224
+Shared Requested Signature Algorithms: ECDSA+SHA256:ECDSA+SHA384:ECDSA+SHA512:Ed25519:Ed448:RSA-PSS+SHA256:RSA-PSS+SHA384:RSA-PSS+SHA512:RSA-PSS+SHA256:RSA-PSS+SHA384:RSA-PSS+SHA512:RSA+SHA256:RSA+SHA384:RSA+SHA512
+Peer signing digest: SHA256
+Peer signature type: RSA-PSS
+Server Temp Key: X25519, 253 bits
+---
+SSL handshake has read 3276 bytes and written 325 bytes
+Verification: OK
+---
+New, TLSv1.3, Cipher is TLS_AES_256_GCM_SHA384
+Server public key is 2048 bit
+Secure Renegotiation IS NOT supported
+Compression: NONE
+Expansion: NONE
+No ALPN negotiated
+Early data was not sent
+Verify return code: 0 (ok)
+---
