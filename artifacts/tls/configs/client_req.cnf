@@ -1,0 +1,10 @@
+[ req ]
+distinguished_name = dn
+prompt = no
+[ dn ]
+C  = US
+ST = FL
+L  = Miami
+O  = PQ-IoT
+OU = Device
+CN = sensor-client

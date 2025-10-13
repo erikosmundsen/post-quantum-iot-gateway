@@ -5,7 +5,7 @@
 This project demonstrates an early-stage prototype of a secure IoT gateway built using a Raspberry Pi 4. It reads data from a DHT11 temperature and humidity sensor and transmits that data using MQTT (Message Queuing Telemetry Transport). The final goal is to secure this communication using **TLS 1.3** and **Post-Quantum Cryptography** (Kyber and Dilithium via liboqs/OpenSSL).
 
 This version of the project includes a working sensor-to-MQTT pipeline.  
-TLS and Post-Quantum integration are planned for the next phase.
+This repository now includes a working MQTT pipeline secured with TLS 1.3 mutual authentication; client authentication and the trust anchor use a post-quantum ML-DSA-65 CA via the OQS provider for OpenSSL.
 
 ---
 
@@ -69,3 +69,71 @@ post-quantum-iot-gateway/
 ├── requirements.txt            # Python dependencies
 ├── .gitignore
 └── README.md                   # You're here!
+
+---
+
+## Security (TLS 1.3 mTLS)
+
+This project now runs Mosquitto over TLS 1.3 with mutual authentication.  
+The Root CA and client certificates use ML-DSA-65 (via the OQS provider), and the broker serves an ECDSA P-256 server certificate signed by that CA for compatibility.
+
+**Test it:**
+```bash
+./scripts/pqc_sub.sh
+./scripts/pqc_pub.sh
+
+Hello from PQC mTLS!
+
+```
+
+**Expected output on subscriber:**
+```
+Hello from PQC mTLS!
+```
+
+---
+
+## 🔧 Setup Instructions (Updated)
+
+This project requires two sets of dependencies — one for the IoT sensor demo (DHT11), and another for the secure MQTT + Post-Quantum Cryptography stack.
+
+### 1. Sensor & MQTT Libraries (Python)
+These are used for collecting temperature/humidity data and publishing over MQTT.
+```bash
+sudo apt-get install -y python3-pip
+pip3 install paho-mqtt Adafruit_DHT
+
+sudo apt-get install -y build-essential cmake git pkg-config ca-certificates curl ninja-build libssl-dev
+
+# liboqs (Open Quantum Safe cryptographic library)
+cd ~/oqs-work
+git clone https://github.com/open-quantum-safe/liboqs.git
+cd liboqs
+git submodule update --init --recursive
+mkdir build && cd build
+cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
+ninja
+sudo ninja install
+sudo ldconfig
+
+# OpenSSL 3 + OQS Provider (for PQC TLS 1.3)
+cd ~/oqs-work
+curl -LO https://www.openssl.org/source/openssl-3.2.1.tar.gz
+tar xzf openssl-3.2.1.tar.gz
+cd openssl-3.2.1
+./Configure linux-aarch64 --prefix=/opt/openssl-3 --libdir=lib
+make -j"$(nproc)"
+sudo make install_sw
+
+# OQS Provider
+cd ~/oqs-work
+git clone https://github.com/open-quantum-safe/oqs-provider.git
+cd oqs-provider
+cmake -S . -B _build -G "Ninja" \
+  -DOPENSSL_ROOT_DIR=/opt/openssl-3 \
+  -Dliboqs_DIR=/usr/local/lib/cmake/liboqs
+cmake --build _build -j"$(nproc)"
+sudo cmake --install _build
+
+sudo apt-get install -y mosquitto mosquitto-clients
+

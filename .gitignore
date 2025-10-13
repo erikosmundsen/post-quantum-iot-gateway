@@ -218,3 +218,57 @@ __pycache__/
 security/*.key
 security/*.srl
 *.save
+# TLS material (do NOT commit private keys)
+artifacts/tls/**/*.key
+artifacts/tls/**/*.csr
+artifacts/tls/**/*.srl
+artifacts/tls/**/*.crt
+artifacts/tls/**/*.pem
+
+# Local logs / temp configs
+artifacts/logs/**
+tmp/**
+*.swp
+# TLS material (do NOT commit private keys/certs)
+artifacts/tls/**/*.key
+artifacts/tls/**/*.csr
+artifacts/tls/**/*.srl
+artifacts/tls/**/*.crt
+artifacts/tls/**/*.pem
+
+# Local logs / temp
+artifacts/logs/**
+tmp/**
+*.swp
+# TLS material (do NOT commit private keys/certs)
+artifacts/tls/**/*.key
+artifacts/tls/**/*.csr
+artifacts/tls/**/*.srl
+artifacts/tls/**/*.crt
+artifacts/tls/**/*.pem
+
+# Local logs / temp
+artifacts/logs/**
+tmp/**
+*.swp
+# TLS material (do NOT commit private keys/certs)
+artifacts/tls/**/*.key
+artifacts/tls/**/*.csr
+artifacts/tls/**/*.srl
+artifacts/tls/**/*.crt
+artifacts/tls/**/*.pem
+
+# Local logs / temp
+artifacts/logs/**
+tmp/**
+*.swp
+# Don’t upload secrets
+artifacts/tls/**/*.key
+artifacts/tls/**/*.crt
+artifacts/tls/**/*.csr
+artifacts/tls/**/*.pem
+
+# Local logs / temp
+artifacts/logs/**
+tmp/**
+*.swp
