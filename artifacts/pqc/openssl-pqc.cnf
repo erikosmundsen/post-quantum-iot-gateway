@@ -1,0 +1,27 @@
+openssl_conf = openssl_init
+
+[openssl_init]
+providers = provider_sect
+ssl_conf = ssl_sect
+
+[provider_sect]
+default = default_sect
+oqsprovider = oqs_sect
+
+[default_sect]
+activate = 1
+
+[oqs_sect]
+module = /opt/openssl-3/lib/ossl-modules/oqsprovider.so
+activate = 1
+
+[ssl_sect]
+system_default = tls_defaults
+
+[tls_defaults]
+# Hybrid KEM: X25519 + ML-KEM-768 (aka Kyber-768)
+Groups = X25519MLKEM768:X25519
+# PQC signatures (correct name includes dashes)
+SignatureAlgorithms = ML-DSA-65:ecdsa_secp256r1
+MinProtocol = TLSv1.3
+MaxProtocol = TLSv1.3
