@@ -12,9 +12,77 @@ The system is built on a Raspberry Pi 4 and designed to serve as a fully integra
 - Post-quantum certificates (ML-DSA-65) issued by a custom Root CA using OpenSSL with the Open Quantum Safe (OQS) provider.
 - A user-facing API and web-based GUI (running on the Pi) for device registration, data visualization, and system configuration.
 
+<<<<<<< HEAD
 The goal is to create a lightweight but secure platform that demonstrates how PQC can be used in real-world embedded and IoT systems. The project targets constrained environments while incorporating modern cryptographic standards resistant to quantum attacks.
 
 In short: Arduino reads data -> sends it to Pi -> Pi brokers it over secure MQTT -> API + GUI expose and display it.
+=======
+---
+## Project Setup on Raspberry Pi (with Virtual Environment)
+
+Follow these steps directly on the Raspberry Pi to set up the environment for the Post-Quantum Secure IoT Gateway:
+
+1. **Clone the repository:**
+
+    ```bash
+    git clone https://github.com/erikosmundsen/post-quantum-iot-gateway.git
+    cd post-quantum-iot-gateway
+    ```
+
+2. **Update packages and install Python 3 & venv if not already installed:**
+
+    ```bash
+    sudo apt update
+    sudo apt install -y python3 python3-pip python3-venv
+    ```
+
+3. **Create a virtual environment:**
+
+    ```bash
+    python3 -m venv venv
+    ```
+
+4. **Activate the virtual environment:**
+
+    ```bash
+    source venv/bin/activate
+    ```
+
+    On Windows (if applicable):
+
+    ```bash
+    venv\Scripts\activate
+    ```
+
+5. **Install required Python packages:**
+
+    If you already have a `requirements.txt` file:
+
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+    Otherwise, install manually and export:
+
+    ```bash
+    pip install Adafruit_DHT
+    pip freeze > requirements.txt
+    ```
+
+6. **Deactivate the virtual environment when you're done:**
+
+    ```bash
+    deactivate
+    ```
+
+7. **Exclude the virtual environment from version control by adding the following to `.gitignore`:**
+
+    ```gitignore
+    venv/
+    ```
+	
+## Hardware Components
+>>>>>>> f0ad68a (Add Raspberry Pi virtual environment setup instructions to README)
 
 ## System Features
 
@@ -113,6 +181,7 @@ sudo make install_sw
 ```
 ### 5. Verify the Setup
 
+<<<<<<< HEAD
 Confirm you’re running the right OpenSSL version:
 
 ```
@@ -183,3 +252,20 @@ Hello from PQC mTLS!
 ```
 
 This confirms that certificate-based mTLS is working between publisher and subscriber using post-quantum credentials.
+=======
+```plaintext
+├── diagrams/
+│   └── block-diagram.png
+├── documentation/
+│   ├── .gitkeep
+│   ├── demo_checklist.md
+│   └── technologies_explained.md
+├── hardware/
+│   ├── BOM.md
+│   └── schematics/
+│       └── raspberrypi-dht11.png
+├── software/
+│   └── .gitkeep
+├── .gitignore
+└── README.md
+>>>>>>> f0ad68a (Add Raspberry Pi virtual environment setup instructions to README)
