@@ -23,7 +23,7 @@ module = /usr/lib/aarch64-linux-gnu/ossl-modules/oqsprovider.so
 system_default = tls_defaults
 
 [tls_defaults]
-MinProtocol = TLSv1.3
+MinProtocol = TLSv1.2
 MaxProtocol = TLSv1.3
 CipherSuites = TLS_AES_256_GCM_SHA384
 # Use the hybrid group name your build supports; keep what you have unless we change it later
