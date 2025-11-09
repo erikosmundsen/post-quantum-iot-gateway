@@ -282,3 +282,4 @@ __pycache__/
 *.env
 *.json
 *.log
+software/certs/out-ec-classic/
