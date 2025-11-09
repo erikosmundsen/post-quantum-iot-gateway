@@ -1,0 +1,2000 @@
+  --cert    "$HOME/post-quantum-iot-gateway/artifacts/tls/client/client.crt" \
+  --key     "$HOME/post-quantum-iot-gateway/artifacts/tls/client/client.key" \
+  --tls-version tlsv1.3 \
+  -m "Hello from PQC mTLS!"
+EOF
+
+chmod +x scripts/pqc_pub.sh
+cat >> .gitignore <<'EOF'
+# TLS material (do NOT commit private keys/certs)
+artifacts/tls/**/*.key
+artifacts/tls/**/*.csr
+artifacts/tls/**/*.srl
+artifacts/tls/**/*.crt
+artifacts/tls/**/*.pem
+
+# Local logs / temp
+artifacts/logs/**
+tmp/**
+*.swp
+EOF
+
+cat >> .gitignore <<'EOF'
+# TLS material (do NOT commit private keys/certs)
+artifacts/tls/**/*.key
+artifacts/tls/**/*.csr
+artifacts/tls/**/*.srl
+artifacts/tls/**/*.crt
+artifacts/tls/**/*.pem
+
+# Local logs / temp
+artifacts/logs/**
+tmp/**
+*.swp
+EOF
+
+cd ~/post-quantum-iot-gateway
+git remote -v
+git status
+git branch -vv
+git log --oneline -n 5
+cd ~/post-quantum-iot-gateway
+git checkout -b update/pqc-mtls
+# Replace old sentences that say "planned" or mention Kyber/Dilithium
+sed -i 's/TLS and Post-Quantum integration are planned for the next phase./This repository now shows a working MQTT setup secured with TLS 1.3 mutual authentication. Client authentication and the trust anchor use an ML-DSA-65 CA via the OQS provider for OpenSSL./' README.md
+sed -i 's/The final goal is to secure this communication using TLS 1.3 and Post-Quantum Cryptography (Kyber and Dilithium via liboqs\/OpenSSL)./The communication is now secured using TLS 1.3 and Post-Quantum Cryptography (ML-DSA-65 signatures via the OQS provider for OpenSSL)./' README.md
+# Add a short new section at the bottom
+cat >> README.md <<'EOF'
+
+---
+
+## Security (TLS 1.3 mTLS)
+
+This project now runs Mosquitto over TLS 1.3 with mutual authentication.  
+The Root CA and client certificates use ML-DSA-65 (via the OQS provider), and the broker serves an ECDSA P-256 server certificate signed by that CA for compatibility.
+
+**Test it:**
+```bash
+./scripts/pqc_sub.sh
+./scripts/pqc_pub.sh
+
+Hello from PQC mTLS!
+
+EOF
+
+cat README.md | tail -n 10
+# Close the open code block and add a clean Expected output section
+echo '```' >> README.md
+echo '' >> README.md
+echo '**Expected output on subscriber:**' >> README.md
+echo '```' >> README.md
+echo 'Hello from PQC mTLS!' >> README.md
+echo '```' >> README.md
+# Quick peek to confirm the tail is tidy
+tail -n 20 README.md
+cat >> .gitignore <<'EOF'
+# Don’t upload secrets
+artifacts/tls/**/*.key
+artifacts/tls/**/*.crt
+artifacts/tls/**/*.csr
+artifacts/tls/**/*.pem
+
+# Local logs / temp
+artifacts/logs/**
+tmp/**
+*.swp
+EOF
+
+git add README.md .gitignore scripts artifacts/pqc 2>/dev/null || true
+git commit -m "Docs: working TLS 1.3 mTLS (ML-DSA CA+client via OQS). Add helper scripts; finalize README test/output block."
+git push -u origin update/pqc-mtls
+git add README.md .gitignore scripts artifacts/pqc 2>/dev/null || true
+git commit -m "Docs: working TLS 1.3 mTLS (ML-DSA CA+client via OQS). Add helper scripts; finalize README test/output block."
+git push -u origin update/pqc-mtls
+git add README.md .gitignore scripts artifacts/pqc 2>/dev/null || true
+git commit -m "Docs: working TLS 1.3 mTLS (ML-DSA CA+client via OQS). Add helper scripts; finalize README test/output block."
+git push -u origin update/pqc-mtls
+git add README.md .gitignore scripts artifacts/pqc 2>/dev/null || true
+git commit -m "Docs: working TLS 1.3 mTLS (ML-DSA CA+client via OQS). Add helper scripts; finalize README test/output block."
+git push -u origin update/pqc-mtls
+git add README.md .gitignore scripts artifacts/pqc 2>/dev/null || true
+git commit -m "Docs: working TLS 1.3 mTLS (ML-DSA CA+client via OQS). Add helper scripts; finalize README test/output block."
+git push -u origin update/pqc-mtls
+ssh-keygen -t ed25519 -C "erikosmundsen@users.noreply.github.com"
+cd ~/post-quantum-iot-gateway
+git remote set-url origin git@github.com:erikosmundsen/post-quantum-iot-gateway.git
+ssh -T git@github.com   # type 'yes' if asked
+git push -u origin update/pqc-mtls
+ls ~/.ssh
+rm ~/.ssh/"eval $(ssh-agent -s)"
+rm ~/.ssh/"eval $(ssh-agent -s).pub"
+ssh-keygen -t ed25519 -C "erikosmundsen@users.noreply.github.com"
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_ed25519
+cat ~/.ssh/id_ed25519.pub
+ssh -T git@github.com
+cd ~/post-quantum-iot-gateway
+git push -u origin update/pqc-mtls
+cd ~/post-quantum-iot-gateway
+git status
+cat >> README.md <<'EOF'
+
+---
+
+## 🔧 Setup Instructions (Updated)
+
+This project requires two sets of dependencies — one for the IoT sensor demo (DHT11), and another for the secure MQTT + Post-Quantum Cryptography stack.
+
+### 1. Sensor & MQTT Libraries (Python)
+These are used for collecting temperature/humidity data and publishing over MQTT.
+```bash
+sudo apt-get install -y python3-pip
+pip3 install paho-mqtt Adafruit_DHT
+
+sudo apt-get install -y build-essential cmake git pkg-config ca-certificates curl ninja-build libssl-dev
+
+# liboqs (Open Quantum Safe cryptographic library)
+cd ~/oqs-work
+git clone https://github.com/open-quantum-safe/liboqs.git
+cd liboqs
+git submodule update --init --recursive
+mkdir build && cd build
+cmake -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
+ninja
+sudo ninja install
+sudo ldconfig
+
+# OpenSSL 3 + OQS Provider (for PQC TLS 1.3)
+cd ~/oqs-work
+curl -LO https://www.openssl.org/source/openssl-3.2.1.tar.gz
+tar xzf openssl-3.2.1.tar.gz
+cd openssl-3.2.1
+./Configure linux-aarch64 --prefix=/opt/openssl-3 --libdir=lib
+make -j"$(nproc)"
+sudo make install_sw
+
+# OQS Provider
+cd ~/oqs-work
+git clone https://github.com/open-quantum-safe/oqs-provider.git
+cd oqs-provider
+cmake -S . -B _build -G "Ninja" \
+  -DOPENSSL_ROOT_DIR=/opt/openssl-3 \
+  -Dliboqs_DIR=/usr/local/lib/cmake/liboqs
+cmake --build _build -j"$(nproc)"
+sudo cmake --install _build
+
+sudo apt-get install -y mosquitto mosquitto-clients
+
+EOF
+
+sudo apt-get install -y mosquitto mosquitto-clients
+cd ~/post-quantum-iot-gateway
+# 1. Remove bad eval files and leftover temporary junk
+rm -f "eval \"\$(ssh-agent -s)\"" "eval \"\$(ssh-agent -s)\".pub"
+# 2. Ensure correct project structure
+mkdir -p artifacts/{pqc,tls,mosquitto} scripts documentation
+# 3. Stage everything that should be versioned
+git add -A
+# 4. Commit with a descriptive message
+git commit -m "Full sync: update PQC mTLS demo, scripts, configs, and README instructions"
+# 5. Push to your branch (update/pqc-mtls)
+git push -u origin update/pqc-mtls
+git config --global user.name "Erik Osmundsen"
+git config --global user.email "erikosmundsen@users.noreply.github.com"
+git add -A
+git commit -m "Full sync: update PQC mTLS demo, scripts, configs, and README instructions"
+git push -u origin update/pqc-mtls
+cd ~/post-quantum-iot-gateway
+git checkout main
+git pull origin main
+git status
+# Check for stray files
+# If you see weird things like "eval "$(ssh-agent -s)"" or temp configs:
+git rm -rf --cached "eval*" 2>/dev/null || true
+rm -rf "eval*" 2>/dev/null || true
+cat > README.md <<'EOF'
+# Post-Quantum Secure IoT Gateway
+
+This project demonstrates a **secure IoT communication framework** that combines:
+- **Raspberry Pi 4** (acting as gateway)
+- **DHT11 sensor** (environmental data)
+- **Mosquitto MQTT broker** (message transport)
+- **TLS 1.3 mutual authentication**
+- **Post-Quantum Cryptography (PQC)** using **ML-DSA-65** via the **Open Quantum Safe (OQS)** provider for **OpenSSL 3**
+
+---
+
+## Overview
+
+The gateway collects sensor data and publishes it securely using **MQTT over TLS 1.3**.  
+Both the broker and clients authenticate using certificates signed by a **PQC Root CA**.  
+This ensures the system is secure against both **classical** and **quantum** attacks.
+
+---
+
+## Features
+- End-to-end **mutual authentication (mTLS)** using TLS 1.3  
+- Certificates signed with **ML-DSA-65 (OQS provider)**  
+- Fully compatible with standard Mosquitto clients  
+- Modular structure separating **sensors**, **PQC stack**, and **test scripts**
+
+---
+
+## Repository Layout
+| Path | Description |
+|------|--------------|
+| `docs/` | Full setup and build instructions (sensors + PQC) |
+| `scripts/` | Helper scripts for environment setup, cert generation, and demos |
+| `artifacts/pqc/` | OpenSSL OQS configuration files |
+| `artifacts/tls/` | Generated CA, server, and client certificates |
+| `artifacts/mosquitto/` | Broker configuration |
+| `hardware/` | Sensor wiring diagrams (DHT11 + GPIO) |
+| `software/` | Source code for sensor data publishing |
+| `diagrams/` | System and block diagrams |
+
+---
+
+## Setup & Usage
+
+To build and run the gateway from scratch, follow the full guide in:
+👉 [**docs/setup_instructions.md**](docs/setup_instructions.md)
+
+Example:
+```bash
+# 1. Start broker
+source scripts/pqc_env.sh
+mosquitto -c artifacts/mosquitto/pqc-mtls.conf -v
+
+# 2. Start subscriber
+source scripts/pqc_env.sh
+mosquitto_sub -h 127.0.0.1 -p 8883 -t "pqc/demo" \
+  --cafile artifacts/tls/ca/ca.crt \
+  --cert artifacts/tls/client/client.crt \
+  --key artifacts/tls/client/client.key \
+  --tls-version tlsv1.3
+
+# 3. Publish a message
+source scripts/pqc_env.sh
+mosquitto_pub -h 127.0.0.1 -p 8883 -t "pqc/demo" \
+  --cafile artifacts/tls/ca/ca.crt \
+  --cert artifacts/tls/client/client.crt \
+  --key artifacts/tls/client/client.key \
+  --tls-version tlsv1.3 \
+  -m "Hello from PQC mTLS!"
+
+
+cd ~/post-quantum-iot-gateway
+git restore README.md
+git checkout main
+git pull origin main
+git status
+git restore --staged .
+git clean -fd
+git status
+git restore --staged .
+git clean -fd
+cat README.md | head -n 20
+# --- PQC environment setup ---
+export PATH=/opt/openssl-3/bin:$PATH
+export LD_LIBRARY_PATH=/opt/openssl-3/lib:/usr/local/lib
+export OPENSSL_MODULES=/opt/openssl-3/lib/ossl-modules
+export OPENSSL_CONF=~/post-quantum-iot-gateway/artifacts/pqc/openssl-pqc.cnf
+export HOME=/home/erikosmundsen13
+sudo pkill mosquitto 2>/dev/null
+env -i   PATH=/usr/sbin:/usr/bin:/bin:/opt/openssl-3/bin   LD_LIBRARY_PATH=/opt/openssl-3/lib:/usr/local/lib   OPENSSL_CONF=/tmp/oqs-min.cnf   OPENSSL_MODULES=/opt/openssl-3/lib/ossl-modules   HOME=/home/erikosmundsen13   "$(command -v mosquitto)" \ -c /home/erikosmundsen13/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls.conf -v
+export PATH=/opt/openssl-3/bin:$PATH
+export LD_LIBRARY_PATH=/opt/openssl-3/lib:/usr/local/lib
+export OPENSSL_MODULES=/opt/openssl-3/lib/ossl-modules
+export OPENSSL_CONF=~/post-quantum-iot-gateway/artifacts/pqc/openssl-pqc.cnf
+export HOME=/home/erikosmundsen13
+# Stop any existing Mosquitto instances
+sudo pkill mosquitto 2>/dev/null
+# Run Mosquitto with PQC-enabled TLS 1.3 configuration
+env -i   PATH=/usr/sbin:/usr/bin:/bin:/opt/openssl-3/bin   LD_LIBRARY_PATH=/opt/openssl-3/lib:/usr/local/lib   OPENSSL_CONF=/tmp/oqs-min.cnf   OPENSSL_MODULES=/opt/openssl-3/lib/ossl-modules   HOME=/home/erikosmundsen13   "$(command -v mosquitto)"   -c /home/erikosmundsen13/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls.conf -v
+export PATH=/opt/openssl-3/bin:$PATH
+export LD_LIBRARY_PATH=/opt/openssl-3/lib:/usr/local/lib
+export OPENSSL_MODULES=/opt/openssl-3/lib/ossl-modules
+export OPENSSL_CONF=~/post-quantum-iot-gateway/artifacts/pqc/openssl-pqc.cnf
+export HOME=/home/erikosmundsen13
+# Stop any existing Mosquitto instances
+sudo pkill mosquitto 2>/dev/null
+# Run Mosquitto with PQC-enabled TLS 1.3 configuration
+env -i   PATH=/usr/sbin:/usr/bin:/bin:/opt/openssl-3/bin   LD_LIBRARY_PATH=/opt/openssl-3/lib:/usr/local/lib   OPENSSL_CONF=/tmp/oqs-min.cnf   OPENSSL_MODULES=/opt/openssl-3/lib/ossl-modules   HOME=/home/erikosmundsen13   "$(command -v mosquitto)"   -c /home/erikosmundsen13/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls.conf -v
+BASE=~/post-quantum-iot-gateway/artifacts/tls
+SRV=$BASE/server
+CA=$BASE/ca
+CFG=$BASE/configs
+/opt/openssl-3/bin/openssl x509 -in "$SRV/server-ecdsa.crt" -noout -text | sed -n 's/^ \{0,1\}Signature Algorithm.*/&/p'
+/opt/openssl-3/bin/openssl x509 -in "$CA/ca.crt"          -noout -text | sed -n 's/^ \{0,1\}Signature Algorithm.*/&/p'
+mkdir -p "$CFG"
+cat > "$CFG/server_req.cnf" <<'EOF'
+[ req ]
+distinguished_name = dn
+prompt = no
+req_extensions = v3_req
+
+[ dn ]
+C = US
+ST = FL
+L = Miami
+O = PQ-IoT
+OU = Gateway
+CN = raspberrypi.local
+
+[ v3_req ]
+subjectAltName = @alt_names
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+
+[ alt_names ]
+DNS.1 = raspberrypi.local
+IP.1  = 127.0.0.1
+EOF
+
+# ECDSA key
+/opt/openssl-3/bin/openssl ecparam -name prime256v1 -genkey -noout -out "$SRV/server-ecdsa.key"
+# CSR with SANs
+/opt/openssl-3/bin/openssl req -new -key "$SRV/server-ecdsa.key"   -out "$SRV/server-ecdsa.csr" -config "$CFG/server_req.cnf"
+# Sign with your ML-DSA-65 CA (strong digest)
+/opt/openssl-3/bin/openssl x509 -req -in "$SRV/server-ecdsa.csr"   -CA "$CA/ca.crt" -CAkey "$CA/ca.key" -CAcreateserial   -out "$SRV/server-ecdsa.crt" -days 825 -sha512   -extfile "$CFG/server_req.cnf" -extensions v3_req
+/opt/openssl-3/bin/openssl x509 -in "$SRV/server-ecdsa.crt" -noout -text | sed -n 's/^ \{0,1\}Signature Algorithm.*/&/p'
+/opt/openssl-3/bin/openssl x509 -in "$CA/ca.crt"          -noout -text | sed -n 's/^ \{0,1\}Signature Algorithm.*/&/p'
+chmod 600 "$SRV/server-ecdsa.key"
+chmod 644 "$SRV/server-ecdsa.crt" "$CA/ca.crt"
+listener 8883
+cafile  /home/erikosmundsen13/post-quantum-iot-gateway/artifacts/tls/ca/ca.crt
+certfile /home/erikosmundsen13/post-quantum-iot-gateway/artifacts/tls/server/server-ecdsa.crt
+keyfile  /home/erikosmundsen13/post-quantum-iot-gateway/artifacts/tls/server/server-ecdsa.key
+require_certificate true
+tls_version tlsv1.3
+BASE=~/post-quantum-iot-gateway/artifacts/tls
+SRV=$BASE/server
+CA=$BASE/ca
+CFG=$BASE/configs
+MOSQ_CONF=~/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls.conf
+/opt/openssl-3/bin/openssl x509 -in "$SRV/server-ecdsa.crt" -noout -text | sed -n 's/^ \{0,1\}Signature Algorithm.*/&/p'
+/opt/openssl-3/bin/openssl x509 -in "$CA/ca.crt"          -noout -text | sed -n 's/^ \{0,1\}Signature Algorithm.*/&/p'
+mkdir -p "$(dirname "$MOSQ_CONF")"
+cat > "$MOSQ_CONF" <<EOF
+listener 8883
+cafile  $CA/ca.crt
+certfile $SRV/server-ecdsa.crt
+keyfile  $SRV/server-ecdsa.key
+require_certificate true
+use_identity_as_username true
+tls_version tlsv1.3
+log_type all
+EOF
+
+sudo pkill mosquitto 2>/dev/null
+env -i   PATH=/usr/sbin:/usr/bin:/bin:/opt/openssl-3/bin   LD_LIBRARY_PATH=/opt/openssl-3/lib:/usr/local/lib   OPENSSL_CONF=/tmp/oqs-min.cnf   OPENSSL_MODULES=/opt/openssl-3/lib/ossl-modules   HOME=/home/erikosmundsen13   "$(command -v mosquitto)" -c "$MOSQ_CONF" -v
+erikosmundsen13@raspberrypi:~ $ BASE=~/post-quantum-iot-gateway/artifacts/tls
+SRV=$BASE/server
+CA=$BASE/ca
+CFG=$BASE/configs
+MOSQ_CONF=~/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls.conf
+erikosmundsen13@raspberrypi:~ $ /opt/openssl-3/bin/openssl x509 -in "$SRV/server-ecdsa.crt" -noout -text | sed -n 's/^ \{0,1\}Signature Algorithm.*/&/p'
+/opt/openssl-3/bin/openssl x509 -in "$CA/ca.crt"          -noout -text | sed -n 's/^ \{0,1\}Signature Algorithm.*/&/p'
+erikosmundsen13@raspberrypi:~ $ mkdir -p "$(dirname "$MOSQ_CONF")"
+cat > "$MOSQ_CONF" <<EOF
+listener 8883
+cafile  $CA/ca.crt
+certfile $SRV/server-ecdsa.crt
+keyfile  $SRV/server-ecdsa.key
+require_certificate true
+use_identity_as_username true
+tls_version tlsv1.3
+log_type all
+EOF
+
+erikosmundsen13@raspberrypi:~ $ sudo pkill mosquitto 2>/dev/null
+env -i   PATH=/usr/sbin:/usr/bin:/bin:/opt/openssl-3/bin   LD_LIBRARY_PATH=/opt/openssl-3/lib:/usr/local/lib   OPENSSL_CONF=/tmp/oqs-min.cnf   OPENSSL_MODULES=/opt/openssl-3/lib/ossl-modules   HOME=/home/erikosmundsen13   "$(command -v mosquitto)" -c "$MOSQ_CONF" -v
+1761257365: mosquitto version 2.0.21 starting
+1761257365: Config loaded from /home/erikosmundsen13/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls.conf.
+1761257365: Opening ipv4 listen socket on port 8883.
+1761257365: Opening ipv6 listen socket on port 8883.
+1761257365: Error: Unable to load server certificate "/home/erikosmundsen13/post-quantum-iot-gateway/artifacts/tls/server/server-ecdsa.crt". Check certfile.
+1761257365: OpenSSL Error[0]: error:0A00018E:SSL routines::ca md too weak
+hostname
+openssl version
+openssl list -providers | grep -i oqs || echo "No OQS provider visible"
+which mosquitto || echo "Mosquitto not found in PATH"
+sudo systemctl status mosquitto --no-pager -l | sed -n '1,25p'
+echo "=== PROJECT LAYOUT (first 3 levels) ==="
+BASE=~/post-quantum-iot-gateway
+[ -d "$BASE" ] && find "$BASE" -maxdepth 3 -type d -print | sed "s|$BASE|.|" || echo "Project folder not found at $BASE"
+echo -e "\n=== MOSQUITTO MAIN CONFIG ==="
+sudo sed -n '1,200p' /etc/mosquitto/mosquitto.conf
+echo -e "\n=== MOSQUITTO CONF.D SNIPPETS (if any) ==="
+sudo sh -c 'for f in /etc/mosquitto/conf.d/*.conf; do echo "--- $f ---"; sed -n "1,200p" "$f"; done' 2>/dev/null || echo "No conf.d snippets"
+echo -e "\n=== ACTIVE TLS SETTINGS (grep) ==="
+sudo grep -En 'listener|tls_version|cafile|capath|certfile|keyfile|require_certificate|ciphers'     /etc/mosquitto/mosquitto.conf /etc/mosquitto/conf.d/*.conf 2>/dev/null || true
+echo -e "\n=== EXISTING ARTIFACTS (keys/certs) UNDER PROJECT (non-recursive) ==="
+ls -l "$BASE"/artifacts/tls/* 2>/dev/null || echo "No TLS artifacts yet"
+echo -e "\n=== OPENSSL CONFIG CONTEXT ==="
+echo "OPENSSL_CONF=${OPENSSL_CONF:-<unset>}"
+openssl version -a | sed -n '1,12p'
+set -e
+BASE=~/post-quantum-iot-gateway/artifacts
+REBUILD=$BASE/tls/secure_rebuild
+mkdir -p "$REBUILD"/{ca,server,client} "$BASE/mosquitto"
+echo "Workspace: $REBUILD"
+cd "$REBUILD/ca"
+# Private key (ECDSA P-256)
+openssl ecparam -name prime256v1 -genkey -noout -out ca_key.pem
+# Self-signed CA cert (3 years), SHA-256
+openssl req -new -x509 -days 1095 -sha256 -key ca_key.pem   -subj "/CN=Gateway Root CA (ECDSA-P256)" -out ca_cert.pem
+chmod 700 "$REBUILD/ca"
+chmod 600 "$REBUILD/ca/ca_key.pem"
+# Show the signature algorithm (should say sha256WithRSA/ECDSA-ish, NOT sha1)
+openssl x509 -in ca_cert.pem -noout -text | grep -i 'Signature Algorithm'
+cd "$REBUILD/server"
+HOSTNAME=$(hostname)
+IPV4=$(hostname -I | awk '{print $1}')   # first IPv4 on the line
+[ -z "$IPV4" ] && IPV4=127.0.0.1
+# Server key
+openssl ecparam -name prime256v1 -genkey -noout -out server_key.pem
+# OpenSSL req config with SANs
+cat > server_req.cnf <<EOF
+[ req ]
+distinguished_name = dn
+prompt = no
+req_extensions = v3_req
+
+[ dn ]
+CN = ${HOSTNAME}
+
+[ v3_req ]
+basicConstraints = CA:false
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt
+
+[ alt ]
+DNS.1 = ${HOSTNAME}
+DNS.2 = raspberrypi.local
+IP.1  = 127.0.0.1
+IP.2  = ${IPV4}
+EOF
+
+# CSR
+openssl req -new -key server_key.pem -out server.csr -config server_req.cnf
+# Sign with CA using SHA-256
+CA_DIR="$REBUILD/ca"
+openssl x509 -req -in server.csr -CA "$CA_DIR/ca_cert.pem" -CAkey "$CA_DIR/ca_key.pem"   -CAcreateserial -days 365 -sha256 -extfile server_req.cnf -extensions v3_req   -out server_cert.pem
+# Build chain
+cat server_cert.pem "$CA_DIR/ca_cert.pem" > server_chain.pem
+chmod 600 server_key.pem
+# Quick glance
+openssl x509 -in server_cert.pem -noout -text | grep -E 'Signature Algorithm|Subject:|Subject Alternative Name'
+cd "$REBUILD/client"
+# Client key (ECDSA P-256 to keep it simple for now)
+openssl ecparam -name prime256v1 -genkey -noout -out client_key.pem
+# CSR with simple CN
+openssl req -new -key client_key.pem -subj "/CN=client1" -out client.csr
+# Minimal client ext file
+cat > client_ext.cnf <<'EOF'
+[ v3_client ]
+basicConstraints = CA:false
+keyUsage = critical, digitalSignature
+extendedKeyUsage = clientAuth
+EOF
+
+# Sign with CA using SHA-256
+CA_DIR="$REBUILD/ca"
+openssl x509 -req -in client.csr -CA "$CA_DIR/ca_cert.pem" -CAkey "$CA_DIR/ca_key.pem"   -CAcreateserial -days 365 -sha256 -extfile client_ext.cnf -extensions v3_client   -out client_cert.pem
+chmod 600 client_key.pem
+# Quick glance
+openssl x509 -in client_cert.pem -noout -text | grep -E 'Signature Algorithm|Subject:'
+CA="$REBUILD/ca/ca_cert.pem"
+SRV="$REBUILD/server/server_cert.pem"
+# Fail if any cert text mentions SHA-1
+! openssl x509 -in "$CA"  -noout -text | grep -qi sha1 || { echo "CA shows SHA-1 — abort"; exit 1; }
+! openssl x509 -in "$SRV" -noout -text | grep -qi sha1 || { echo "Server shows SHA-1 — abort"; exit 1; }
+# Verify chain
+openssl verify -CAfile "$CA" "$SRV"
+echo "Preflight OK ✅"
+TESTCONF=~/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls-test.conf
+cat > "$TESTCONF" <<EOF
+listener 8884
+protocol mqtt
+
+# TLS 1.3 only
+tls_version tlsv1.3
+ciphers TLS_AES_256_GCM_SHA384
+
+# Our fresh artifacts
+cafile    $REBUILD/ca/ca_cert.pem
+certfile  $REBUILD/server/server_cert.pem
+keyfile   $REBUILD/server/server_key.pem
+
+# Require client certs for mTLS
+require_certificate true
+use_identity_as_username true
+EOF
+
+# Run broker in foreground for easy logs
+sudo mosquitto -c "$TESTCONF" -v
+ssh pi@raspberry.local
+ssh pi@raspberrypi.local
+sudo systemctl enable ssh
+sudo systemctl start ssh
+hostname -I
+cat ~/.ssh/id_ed25519.pub | ssh <YOUR_PI_USER>@<PI_IP> "mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
+cat ~/.ssh/id_ed25519.pub erikosmundsen13/192.168.4.27 \
+cat ~/.ssh/id_ed25519.pub erikosmundsen13@192.168.4.27
+[200~mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+nano ~/.ssh/authorized_keys
+chmod 600 ~/.ssh/authorized_keys
+mosquitto_sub -h 127.0.0.1 -p 8884 -t demo/pqc -d   --cafile /etc/mosquitto/pqc/ca/ca_cert.pem   --cert   /etc/mosquitto/pqc/client/client_cert.pem   --key    /etc/mosquitto/pqc/client/client_key.pem   --tls-version tlsv1.3
+ls -l /etc/mosquitto/pqc/*/*
+sudo ls -l /etc/mosquitto/pqc/*/*
+# 1. Recreate the standard folder structure
+sudo mkdir -p /etc/mosquitto/pqc/{ca,server,client}
+# 2. Copy working certs and keys from your repo
+sudo cp ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/ca/ca_cert.pem         /etc/mosquitto/pqc/ca/
+sudo cp ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/server/server_{cert,key}.pem         /etc/mosquitto/pqc/server/
+sudo cp ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/client/client_{cert,key}.pem         /etc/mosquitto/pqc/client/
+# 3. Fix ownership and permissions (root:mosquitto)
+sudo chown -R root:mosquitto /etc/mosquitto/pqc
+sudo find /etc/mosquitto/pqc -type d -exec chmod 750 {} \;
+sudo chmod 644 /etc/mosquitto/pqc/ca/ca_cert.pem                /etc/mosquitto/pqc/server/server_cert.pem                /etc/mosquitto/pqc/client/client_cert.pem
+sudo chmod 640 /etc/mosquitto/pqc/server/server_key.pem /etc/mosquitto/pqc/client/client_key.pem
+sudo ls -l /etc/mosquitto/pqc/*/*
+ls -l ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/*/*
+~/post-quantum-iot-gateway/artifacts/tls/server/server_cert.pem
+~/post-quantum-iot-gateway/artifacts/tls/server/server_key.pem
+~/post-quantum-iot-gateway/artifacts/tls/client/client_cert.pem
+~/post-quantum-iot-gateway/artifacts/tls/client/client_key.pem
+~/post-quantum-iot-gateway/artifacts/tls/ca/ca_cert.pem
+# create target dirs (idempotent)
+sudo mkdir -p /etc/mosquitto/pqc/{ca,server,client}
+# copy from *secure_rebuild* (these are the ones you listed)
+sudo cp ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/ca/ca_cert.pem         /etc/mosquitto/pqc/ca/
+sudo cp ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/server/server_{cert,key}.pem         /etc/mosquitto/pqc/server/
+sudo cp ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/client/client_{cert,key}.pem         /etc/mosquitto/pqc/client/
+# ownership & perms (server/client private keys should not be world-readable)
+sudo chown -R root:mosquitto /etc/mosquitto/pqc
+sudo find /etc/mosquitto/pqc -type d -exec chmod 750 {} \;
+sudo chmod 644 /etc/mosquitto/pqc/ca/ca_cert.pem                /etc/mosquitto/pqc/server/server_cert.pem                /etc/mosquitto/pqc/client/client_cert.pem
+sudo chmod 640 /etc/mosquitto/pqc/server/server_key.pem                /etc/mosquitto/pqc/client/client_key.pem
+sudo ls -l /etc/mosquitto/pqc/*/*
+sudo head -n1 /etc/mosquitto/pqc/ca/ca_cert.pem
+sudo head -n1 /etc/mosquitto/pqc/client/client_cert.pem
+sudo head -n1 /etc/mosquitto/pqc/client/client_key.pem
+journalctl -u mosquitto -f
+# 0) Clean slate (harmless if empty)
+sudo rm -rf /etc/mosquitto/pqc
+sudo install -d -m 750 -o root -g mosquitto /etc/mosquitto/pqc/{ca,server,client}
+# 1) Copy CA (readable)
+sudo install -m 644 -o root -g mosquitto   ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/ca/ca_cert.pem   /etc/mosquitto/pqc/ca/
+# 2) Copy SERVER cert/key (key is 640)
+sudo install -m 644 -o root -g mosquitto   ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/server/server_cert.pem   /etc/mosquitto/pqc/server/
+sudo install -m 640 -o root -g mosquitto   ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/server/server_key.pem   /etc/mosquitto/pqc/server/
+# 3) Copy CLIENT cert/key (key is 640)
+sudo install -m 644 -o root -g mosquitto   ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/client/client_cert.pem   /etc/mosquitto/pqc/client/
+sudo install -m 640 -o root -g mosquitto   ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/client/client_key.pem   /etc/mosquitto/pqc/client/
+sudo ls -l /etc/mosquitto/pqc/*/*
+sudo head -n1 /etc/mosquitto/pqc/ca/ca_cert.pem
+sudo head -n1 /etc/mosquitto/pqc/client/client_cert.pem
+sudo head -n1 /etc/mosquitto/pqc/client/client_key.pem
+# 1) Make a private client dir for your user
+mkdir -p ~/.pqc-client
+chmod 700 ~/.pqc-client
+# 2) Copy client cert+key and CA *from your working secure_rebuild*
+cp ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/client/client_cert.pem ~/.pqc-client/
+cp ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/client/client_key.pem  ~/.pqc-client/
+cp ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/ca/ca_cert.pem       ~/.pqc-client/
+# 3) Tighten perms (key must be 600 for many TLS clients)
+chmod 600 ~/.pqc-client/client_key.pem
+chmod 644 ~/.pqc-client/client_cert.pem ~/.pqc-client/ca_cert.pem
+head -n1 ~/.pqc-client/ca_cert.pem
+head -n1 ~/.pqc-client/client_cert.pem
+head -n1 ~/.pqc-client/client_key.pem
+# expect:
+# -----BEGIN CERTIFICATE-----
+# -----BEGIN PRIVATE KEY-----   (or EC PRIVATE KEY if EC)
+journalctl -u mosquitto -f
+cd ~/post-quantum-iot-gateway
+# Add everything relevant, including configs, tools, and new docs
+git add artifacts/tools/preflight.sh
+git add artifacts/mosquitto/pqc-mtls.conf
+git add docs/ || true
+git add README.md || true
+# Commit your current working state
+git commit -m "Stabilized PQC mTLS demo with preflight checks and separated certs"
+# Push to your remote branch
+git push origin main
+sudo systemctl stop mosquitto
+exit
+mosquitto_pub -h 127.0.0.1 -p 8884 -t "demo/pqc" -m "hello-pqc" -d   --cafile ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/ca/ca_cert.pem   --cert   ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/client/client_cert.pem   --key    ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/client/client_key.pem   --tls-version tlsv1.3
+mosquitto_pub -h 127.0.0.1 -p 8884 -t demo/pqc -m "hello-pqc" -d   --cafile /etc/mosquitto/pqc/ca/ca_cert.pem   --cert   /etc/mosquitto/pqc/client/client_cert.pem   --key    /etc/mosquitto/pqc/client/client_key.pem   --tls-version tlsv1.3
+mosquitto_sub -h 127.0.0.1 -p 8884 -t demo/pqc -d   --cafile ~/.pqc-client/ca_cert.pem   --cert   ~/.pqc-client/client_cert.pem   --key    ~/.pqc-client/client_key.pem   --tls-version tlsv1.3
+sudo systemctl stop mosquitto
+exit
+ls ~/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls-test.conf
+# Start Mosquitto detached from your SSH session
+nohup sudo mosquitto -c ~/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls-test.conf -v > ~/mosq-test.log 2>&1 &
+sleep 2
+tail -20 ~/mosq-test.log
+sed -n '1,200p' ~/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls-test.conf
+sudo sed -i '/^[[:space:]]*ciphers_tls1\.3\b/d' ~/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls-test.conf
+sudo sed -i '/^[[:space:]]*ciphers\b/d'        ~/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls-test.conf
+nohup sudo mosquitto -c ~/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls-test.conf -v > ~/mosq-test.log 2>&1 &
+sleep 2
+tail -40 ~/mosq-test.log
+REBUILD=~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild
+# Create a broker-readable location
+sudo mkdir -p /etc/mosquitto/certs/secure_rebuild/{ca,server,client}
+# Copy public certs + keys
+sudo cp "$REBUILD/ca/ca_cert.pem"                               /etc/mosquitto/certs/secure_rebuild/ca/
+sudo cp "$REBUILD/server/server_cert.pem"                        /etc/mosquitto/certs/secure_rebuild/server/
+sudo cp "$REBUILD/server/server_key.pem"                         /etc/mosquitto/certs/secure_rebuild/server/
+sudo cp "$REBUILD/client/client_cert.pem"                        /etc/mosquitto/certs/secure_rebuild/client/
+sudo cp "$REBUILD/client/client_key.pem"                         /etc/mosquitto/certs/secure_rebuild/client/
+# Tight permissions: readable by root + mosquitto group
+sudo chown -R root:mosquitto /etc/mosquitto/certs/secure_rebuild
+sudo find /etc/mosquitto/certs/secure_rebuild -type d -exec sudo chmod 750 {} \;
+sudo chmod 644 /etc/mosquitto/certs/secure_rebuild/ca/ca_cert.pem
+sudo chmod 644 /etc/mosquitto/certs/secure_rebuild/server/server_cert.pem
+sudo chmod 640 /etc/mosquitto/certs/secure_rebuild/server/server_key.pem
+sudo chmod 644 /etc/mosquitto/certs/secure_rebuild/client/client_cert.pem
+sudo chmod 640 /etc/mosquitto/certs/secure_rebuild/client/client_key.pem
+TESTCONF=~/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls-test.conf
+cat > "$TESTCONF" <<'EOF'
+listener 8884
+protocol mqtt
+
+# TLS 1.3 only
+tls_version tlsv1.3
+
+# Broker-readable cert locations
+cafile    /etc/mosquitto/certs/secure_rebuild/ca/ca_cert.pem
+certfile  /etc/mosquitto/certs/secure_rebuild/server/server_cert.pem
+keyfile   /etc/mosquitto/certs/secure_rebuild/server/server_key.pem
+
+# Require client certs for mTLS
+require_certificate true
+use_identity_as_username true
+EOF
+
+nohup sudo mosquitto -c "$TESTCONF" -v > ~/mosq-test.log 2>&1 &
+sleep 2
+tail -40 ~/mosq-test.log
+REBUILD=~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild
+CLIENTLOCAL=~/post-quantum-iot-gateway/artifacts/tls/client_local
+mkdir -p "$CLIENTLOCAL"
+# Copy the public CA + client cert, and the client key for YOUR tools
+cp "$REBUILD/ca/ca_cert.pem"            "$CLIENTLOCAL/ca_cert.pem"
+cp "$REBUILD/client/client_cert.pem"    "$CLIENTLOCAL/client_cert.pem"
+cp "$REBUILD/client/client_key.pem"     "$CLIENTLOCAL/client_key.pem"
+# Tight perms for your local key
+chmod 644 "$CLIENTLOCAL/ca_cert.pem" "$CLIENTLOCAL/client_cert.pem"
+chmod 600 "$CLIENTLOCAL/client_key.pem"
+openssl s_client -connect 127.0.0.1:8884 -tls1_3 -brief   -CAfile "$CLIENTLOCAL/ca_cert.pem"
+mosquitto_sub -h 127.0.0.1 -p 8884 -t "demo/pqc"   --cafile "$CLIENTLOCAL/ca_cert.pem"   --cert   "$CLIENTLOCAL/client_cert.pem"   --key    "$CLIENTLOCAL/client_key.pem"   --tls-version tlsv1.3 -d
+CLIENTLOCAL=~/post-quantum-iot-gateway/artifacts/tls/client_local
+ls -l "$CLIENTLOCAL"
+mosquitto_sub -h 127.0.0.1 -p 8884 -t "demo/pqc"   --cafile  ~/post-quantum-iot-gateway/artifacts/tls/client_local/ca_cert.pem   --cert    ~/post-quantum-iot-gateway/artifacts/tls/client_local/client_cert.pem   --key     ~/post-quantum-iot-gateway/artifacts/tls/client_local/client_key.pem   --tls-version tlsv1.3 -d
+openssl s_client -connect 127.0.0.1:8884 -tls1_3 -brief   -CAfile ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/ca/ca_cert.pem
+openssl s_client -connect 127.0.0.1:8884 -tls1_3 -brief   -CAfile  ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/ca/ca_cert.pem   -cert    ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/client/client_cert.pem   -key     ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/client/client_key.pem
+tee ~/post-quantum-iot-gateway/artifacts/tools/preflight.sh >/dev/null <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() { echo "Usage: $0 [-c /path/to/mosquitto.conf]"; }
+
+CONF_ARG=""
+while getopts ":c:h" opt; do
+  case "$opt" in
+    c) CONF_ARG="$OPTARG" ;;
+    h|\?) usage; exit 1 ;;
+  esac
+done
+
+# Pick a config: CLI > repo default > conf.d > main
+CANDIDATES=(
+  "$CONF_ARG"
+  "$HOME/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls.conf"
+  "/etc/mosquitto/conf.d/pqc-mtls.conf"
+  "/etc/mosquitto/mosquitto.conf"
+)
+CONF=""
+for c in "${CANDIDATES[@]}"; do
+  [ -n "$c" ] && [ -f "$c" ] && CONF="$c" && break
+done
+[ -n "$CONF" ] || { echo "PRECHECK: no mosquitto config found."; exit 1; }
+echo "PRECHECK: using config: $CONF"
+
+# Strip comments; normalize whitespace
+line() { awk '!/^\s*#/{print}' "$CONF"; }
+get_opt() { line | awk -v k="$1" '$1==k{print $2; exit}'; }
+
+CA=$(get_opt cafile)
+SRV=$(get_opt certfile)
+KEY=$(get_opt keyfile)
+PORT=$(line | awk '$1=="listener"{print $2; exit}')
+TLSVER=$(get_opt tls_version)
+HAS_CIPHERS=$(line | awk '$1=="ciphers"{print $0; found=1} END{exit !found}')
+HAS_CIPHERS13=$(line | awk '$1=="ciphers_tls13"{print $0; found=1} END{exit !found}')
+
+err(){ echo "PRECHECK: ERROR: $*" >&2; exit 1; }
+warn(){ echo "PRECHECK: WARN:  $*" >&2; }
+
+# 1) Core fields present
+[ -n "$CA"  ]  || err "cafile not set in $CONF"
+[ -n "$SRV" ]  || err "certfile not set in $CONF"
+[ -n "$KEY" ]  || err "keyfile not set in $CONF"
+[ -n "$PORT" ] || { PORT="8883"; warn "no 'listener' found; defaulting port=$PORT"; }
+
+# 2) Files exist
+[ -f "$CA"  ] || err "missing CA: $CA"
+[ -f "$SRV" ] || err "missing server cert: $SRV"
+[ -f "$KEY" ] || err "missing server key: $KEY"
+
+# 3) No SHA-1 anywhere (OpenSSL sec_level=2 friendly)
+openssl x509 -in "$CA"  -noout -text | grep -qi 'sha1' && err "CA shows SHA-1"
+openssl x509 -in "$SRV" -noout -text | grep -qi 'sha1' && err "Server cert shows SHA-1"
+
+# 4) Chain verifies
+openssl verify -CAfile "$CA" "$SRV" | grep -q ': OK' || err "OpenSSL verify failed"
+
+# 5) mosquitto user can read (incl. directory traverse)
+sudo -u mosquitto head -c1 "$CA"  >/dev/null 2>&1 || err "mosquitto cannot read CA (check directory ACLs)"
+sudo -u mosquitto head -c1 "$SRV" >/dev/null 2>&1 || err "mosquitto cannot read server cert (check directory ACLs)"
+sudo -u mosquitto head -c1 "$KEY" >/dev/null 2>&1 || err "mosquitto cannot read server key (group/ACL)"
+
+# 6) TLS 1.3 present, no legacy cipher pinning
+[ -n "$TLSVER" ] || warn "tls_version not set; Mosquitto may allow < TLS 1.3"
+echo "$TLSVER" | grep -qi 'tlsv1\.3' || warn "tls_version is not TLSv1.3 (found: '$TLSVER')"
+[ -z "$HAS_CIPHERS" ]   || warn "legacy 'ciphers' found (TLS ≤1.2). Remove it for TLS 1.3-only listeners."
+[ -z "$HAS_CIPHERS13" ] || warn "'ciphers_tls13' present; consider removing to use OpenSSL defaults."
+
+# 7) Port availability (informational)
+if ss -tln | awk '{print $4}' | grep -q ":$PORT$"; then
+  warn "port $PORT already in use (ok if broker is already running)"
+else
+  echo "PRECHECK: port $PORT free"
+fi
+
+echo "PRECHECK: OK"
+EOF
+
+chmod +x ~/post-quantum-iot-gateway/artifacts/tools/preflight.sh
+mosquitto_sub -h 127.0.0.1 -p 8884 -t "demo/pqc" -d   --cafile ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/ca/ca_cert.pem   --cert   ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/client/client_cert.pem   --key    ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/client/client_key.pem   --tls-version tlsv1.3
+openssl s_client -connect 127.0.0.1:8884 -tls1_3 -brief   -CAfile /etc/mosquitto/certs/secure_rebuild/ca/ca_cert.pem
+mosquitto_pub -h 127.0.0.1 -p 8884 -t "demo/pqc" -m "hello-pqc"   --cafile "$CLIENTLOCAL/ca_cert.pem"   --cert   "$CLIENTLOCAL/client_cert.pem"   --key    "$CLIENTLOCAL/client_key.pem"   --tls-version tlsv1.3 -d
+CLIENTLOCAL=~/post-quantum-iot-gateway/artifacts/tls/client_local
+ls -l "$CLIENTLOCAL"
+mosquitto_pub -h 127.0.0.1 -p 8884 -t "demo/pqc" -m "hello-pqc"   --cafile  ~/post-quantum-iot-gateway/artifacts/tls/client_local/ca_cert.pem   --cert    ~/post-quantum-iot-gateway/artifacts/tls/client_local/client_cert.pem   --key     ~/post-quantum-iot-gateway/artifacts/tls/client_local/client_key.pem   --tls-version tlsv1.3 -d
+# --- Paths used in your working setup ---
+BASE=~/post-quantum-iot-gateway
+REBUILD=$BASE/artifacts/tls/secure_rebuild
+CLIENTLOCAL=$BASE/artifacts/tls/client_local
+TESTCONF=$BASE/artifacts/mosquitto/pqc-mtls-test.conf
+# --- Script folder ---
+mkdir -p $BASE/scripts/demo_mtls
+cd $BASE/scripts/demo_mtls
+# Shared env (all other scripts source this)
+cat > env_demo.sh <<'EOF'
+BASE=~/post-quantum-iot-gateway
+REBUILD=$BASE/artifacts/tls/secure_rebuild
+CLIENTLOCAL=$BASE/artifacts/tls/client_local
+TESTCONF=$BASE/artifacts/mosquitto/pqc-mtls-test.conf
+EOF
+
+# Broker (foreground logs)
+cat > broker.sh <<'EOF'
+#!/usr/bin/env bash
+set -e
+source "$(dirname "$0")/env_demo.sh"
+echo "Starting Mosquitto on :8884 with $TESTCONF"
+echo "Close this window to stop the broker."
+sudo mosquitto -c "$TESTCONF" -v
+EOF
+
+chmod +x broker.sh
+# Subscriber (stays connected and prints messages)
+cat > subscriber.sh <<'EOF'
+#!/usr/bin/env bash
+set -e
+source "$(dirname "$0")/env_demo.sh"
+echo "Connecting subscriber to demo/pqc @ 127.0.0.1:8884 (TLS 1.3 mTLS)"
+mosquitto_sub -h 127.0.0.1 -p 8884 -t "demo/pqc" \
+  --cafile  "$CLIENTLOCAL/ca_cert.pem" \
+  --cert    "$CLIENTLOCAL/client_cert.pem" \
+  --key     "$CLIENTLOCAL/client_key.pem" \
+  --tls-version tlsv1.3 -d
+EOF
+
+chmod +x subscriber.sh
+# Publisher (waits for Enter, then sends one message)
+cat > publisher.sh <<'EOF'
+#!/usr/bin/env bash
+set -e
+source "$(dirname "$0")/env_demo.sh"
+MSG="${1:-Hello from PQC mTLS!}"
+echo "Ready to publish to demo/pqc (TLS 1.3 mTLS)."
+echo "Press Enter to publish, or Ctrl+C to abort."
+read -r
+mosquitto_pub -h 127.0.0.1 -p 8884 -t "demo/pqc" -m "$MSG" \
+  --cafile  "$CLIENTLOCAL/ca_cert.pem" \
+  --cert    "$CLIENTLOCAL/client_cert.pem" \
+  --key     "$CLIENTLOCAL/client_key.pem" \
+  --tls-version tlsv1.3 -d
+echo "Published: $MSG"
+echo "You can close this window."
+EOF
+
+chmod +x publisher.sh
+# Launcher: opens three terminals (tries lxterminal, then xterm; falls back to tmux)
+cat > run_demo.sh <<'EOF'
+#!/usr/bin/env bash
+set -e
+DIR="$(cd "$(dirname "$0")" && pwd)"
+term=""
+if command -v lxterminal >/dev/null 2>&1; then term="lxterminal -t"; fi
+if [ -z "$term" ] && command -v xterm >/dev/null 2>&1; then term="xterm -T"; fi
+
+if [ -n "$term" ]; then
+  $term "Broker :8884"    -e bash -lc "cd '$DIR'; ./broker.sh" &
+  sleep 1
+  $term "Subscriber"      -e bash -lc "cd '$DIR'; ./subscriber.sh" &
+  sleep 1
+  $term "Publisher (press Enter)" -e bash -lc "cd '$DIR'; ./publisher.sh" &
+else
+  # No GUI terminal? use tmux
+  tmux new-session  -d -s pqc 'cd "'"$DIR"'" && ./broker.sh'
+  tmux split-window -h -t pqc 'cd "'"$DIR"'" && ./subscriber.sh'
+  tmux split-window -v -t pqc:0.1 'cd "'"$DIR"'" && ./publisher.sh'
+  tmux select-layout -t pqc tiled
+  tmux attach -t pqc
+fi
+EOF
+
+chmod +x run_demo.sh
+# Optional: quick killer if the broker was left in background
+cat > stop_demo.sh <<'EOF'
+#!/usr/bin/env bash
+sudo pkill -x mosquitto || true
+echo "Stopped mosquitto (if it was running)."
+EOF
+
+chmod +x stop_demo.sh
+echo "Done. Scripts are in $BASE/scripts/demo_mtls"
+~/post-quantum-iot-gateway/scripts/demo_mtls/run_demo.sh
+sudo systemctl status mosquitto --no-pager -l
+sudo ss -tlnp | grep 8884 || sudo ss -tlnp | grep 8883
+sudo systemctl start mosquitto
+sudo mosquitto -c ~/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls.conf -v
+# From your Pi
+CANON=~/post-quantum-iot-gateway/artifacts/tls
+echo $CANON
+nano ~/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls.conf
+# Make directories traversable by mosquitto group
+sudo chgrp -R mosquitto ~/post-quantum-iot-gateway/artifacts/tls
+sudo chmod 750  ~/post-quantum-iot-gateway/artifacts/tls
+sudo chmod 750  ~/post-quantum-iot-gateway/artifacts/tls/ca
+sudo chmod 750  ~/post-quantum-iot-gateway/artifacts/tls/server
+sudo chmod 750  ~/post-quantum-iot-gateway/artifacts/tls/client  # ok to be stricter later
+# CA and certs: world-readable OK (no secrets inside)
+sudo chmod 644 ~/post-quantum-iot-gateway/artifacts/tls/ca/ca_cert.pem
+sudo chmod 644 ~/post-quantum-iot-gateway/artifacts/tls/server/server_cert.pem
+sudo chmod 644 ~/post-quantum-iot-gateway/artifacts/tls/client/client_cert.pem 2>/dev/null || true
+# Private keys: only user+group
+sudo chgrp mosquitto ~/post-quantum-iot-gateway/artifacts/tls/server/server_key.pem
+sudo chmod 640  ~/post-quantum-iot-gateway/artifacts/tls/server/server_key.pem
+# (Client private key can stay 600 under your user; not used by the broker)
+# Show likely demo locations
+ls -l /etc/mosquitto/certs/secure_rebuild/*/* 2>/dev/null
+# Broad search for PEM/CRT/KEY under the repo and mosquitto dirs
+find ~/post-quantum-iot-gateway -maxdepth 5 -type f \( -iname "*.pem" -o -iname "*.crt" -o -iname "*.key" \) -print
+find /etc/mosquitto -maxdepth 5 -type f \( -iname "*.pem" -o -iname "*.crt" -o -iname "*.key" \) -print
+nano ~/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls.conf
+# let the mosquitto group traverse the tree
+sudo chgrp -R mosquitto ~/post-quantum-iot-gateway/artifacts/tls
+sudo find  ~/post-quantum-iot-gateway/artifacts/tls -type d -exec chmod 750 {} \;
+# public certs can be 644
+sudo chmod 644 ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/ca/ca_cert.pem
+sudo chmod 644 ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/server/server_cert.pem
+sudo chmod 644 ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/client/client_cert.pem
+# server private key: group-readable by mosquitto, not world
+sudo chgrp mosquitto ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/server/server_key.pem
+sudo chmod 640  ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/server/server_key.pem
+sudo systemctl stop mosquitto
+sudo mosquitto -c ~/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls.conf -v
+sudo systemctl stop mosquitto
+sudo mosquitto -c ~/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls.conf -v
+sudo ss -tulpn | grep 8884 || echo "port 8884 is free"
+ps -ef | grep [m]osquitto
+sudo systemctl stop mosquitto
+sudo killall mosquitto 2>/dev/null
+sleep 1
+sudo ss -tulpn | grep 8884 || echo "port 8884 is free now"
+sudo mosquitto -c ~/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls.conf -v
+nano ~/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls.conf
+sudo chgrp -R mosquitto ~/post-quantum-iot-gateway/artifacts/tls
+sudo find  ~/post-quantum-iot-gateway/artifacts/tls -type d -exec chmod 750 {} \;
+# public certs readable
+sudo chmod 644 ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/ca/ca_cert.pem
+sudo chmod 644 ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/server/server_cert.pem
+sudo chmod 644 ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/client/client_cert.pem
+# private key readable by mosquitto only
+sudo chgrp mosquitto ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/server/server_key.pem
+sudo chmod 640  ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/server/server_key.pem
+sudo systemctl stop mosquitto
+sudo killall mosquitto 2>/dev/null
+sudo mosquitto -c ~/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls.conf -v
+namei -l /home/erikosmundsen13/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/ca/ca_cert.pem
+sudo -u mosquitto head -n1 /home/erikosmundsen13/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/ca/ca_cert.pem
+# if this errors "Permission denied", traverse is still blocked
+# 1) Ensure ACL tools are present
+sudo apt-get update && sudo apt-get install -y acl
+# 2) Grant only "execute" (traverse) on your home dir to the mosquitto user
+sudo setfacl -m u:mosquitto:--x /home/erikosmundsen13
+# 3) Quick check: mosquitto can traverse but not list your home
+sudo -u mosquitto ls /home/erikosmundsen13 2>/dev/null && echo "Should NOT list" || echo "Traversal OK, listing blocked"
+# 4) Verify the CA file is now readable by the mosquitto user
+sudo -u mosquitto head -n1 /home/erikosmundsen13/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/ca/ca_cert.pem
+sudo systemctl stop mosquitto
+sudo killall mosquitto 2>/dev/null
+sudo mosquitto -c ~/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls.conf -v
+mkdir -p ~/post-quantum-iot-gateway/artifacts/tools
+tee ~/post-quantum-iot-gateway/artifacts/tools/preflight.sh >/dev/null <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() { echo "Usage: $0 [-c /path/to/mosquitto.conf]"; }
+
+CONF_ARG=""
+while getopts ":c:h" opt; do
+  case "$opt" in
+    c) CONF_ARG="$OPTARG" ;;
+    h|\?) usage; exit 1 ;;
+  esac
+done
+
+# Pick a config: CLI > repo default > conf.d > main
+CANDIDATES=(
+  "$CONF_ARG"
+  "$HOME/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls.conf"
+  "/etc/mosquitto/conf.d/pqc-mtls.conf"
+  "/etc/mosquitto/mosquitto.conf"
+)
+CONF=""
+for c in "${CANDIDATES[@]}"; do
+  [ -n "$c" ] && [ -f "$c" ] && CONF="$c" && break
+done
+[ -n "$CONF" ] || { echo "PRECHECK: no mosquitto config found."; exit 1; }
+
+echo "PRECHECK: using config: $CONF"
+
+# Strip comments and normalize whitespace for parsing
+line() { awk '!/^\s*#/{print}' "$CONF"; }
+
+get_opt() { line | awk -v k="$1" '$1==k{print $2; exit}'; }
+
+CA=$(get_opt cafile)
+SRV=$(get_opt certfile)
+KEY=$(get_opt keyfile)
+PORT=$(line | awk '$1=="listener"{print $2; exit}')
+TLSVER=$(get_opt tls_version)
+HAS_CIPHERS=$(line | awk '$1=="ciphers"{print $0; found=1} END{exit !found}')
+HAS_CIPHERS13=$(line | awk '$1=="ciphers_tls13"{print $0; found=1} END{exit !found}')
+
+err(){ echo "PRECHECK: ERROR: $*" >&2; exit 1; }
+warn(){ echo "PRECHECK: WARN:  $*" >&2; }
+
+# 1) Core fields present
+[ -n "$CA"  ]  || err "cafile not set in $CONF"
+[ -n "$SRV" ]  || err "certfile not set in $CONF"
+[ -n "$KEY" ]  || err "keyfile not set in $CONF"
+[ -n "$PORT" ] || { PORT="8883"; warn "no 'listener' found; defaulting port=$PORT"; }
+
+# 2) Files exist
+[ -f "$CA"  ] || err "missing CA: $CA"
+[ -f "$SRV" ] || err "missing server cert: $SRV"
+[ -f "$KEY" ] || err "missing server key: $KEY"
+
+# 3) No SHA-1 anywhere (OpenSSL sec_level=2 friendly)
+openssl x509 -in "$CA"  -noout -text | grep -qi 'sha1' && err "CA shows SHA-1"
+openssl x509 -in "$SRV" -noout -text | grep -qi 'sha1' && err "Server cert shows SHA-1"
+
+# 4) Chain verifies
+openssl verify -CAfile "$CA" "$SRV" | grep -q ': OK' || err "OpenSSL verify failed"
+
+# 5) mosquitto user can read files (traverse included)
+sudo -u mosquitto head -c1 "$CA"  >/dev/null 2>&1 || err "mosquitto cannot read CA (check directory ACLs)"
+sudo -u mosquitto head -c1 "$SRV" >/dev/null 2>&1 || err "mosquitto cannot read server cert (check directory ACLs)"
+sudo -u mosquitto head -c1 "$KEY" >/dev/null 2>&1 || err "mosquitto cannot read server key (group/ACL)"
+
+# 6) TLS 1.3 present, no legacy cipher pinning
+[ -n "$TLSVER" ] || warn "tls_version not set; Mosquitto may allow < TLS 1.3"
+echo "$TLSVER" | grep -qi 'tlsv1\.3' || warn "tls_version is not TLSv1.3 (found: '$TLSVER')"
+[ -z "$HAS_CIPHERS" ]   || warn "legacy 'ciphers' found (TLS ≤1.2). Remove it for TLS 1.3-only listeners."
+[ -z "$HAS_CIPHERS13" ] || warn "'ciphers_tls13' present; consider removing to use OpenSSL defaults."
+
+# 7) Port availability (informational)
+if ss -tln | awk '{print $4}' | grep -q ":$PORT$"; then
+  warn "port $PORT already in use (ok if broker is already running)"
+else
+  echo "PRECHECK: port $PORT free"
+fi
+
+echo "PRECHECK: OK"
+EOF
+
+chmod +x ~/post-quantum-iot-gateway/artifacts/tools/preflight.sh
+~/post-quantum-iot-gateway/artifacts/tools/preflight.sh -c ~/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls.conf
+nano ~/post-quantum-iot-gateway/artifacts/tools/preflight.sh
+chmod +x ~/post-quantum-iot-gateway/artifacts/tools/preflight.sh
+~/post-quantum-iot-gateway/artifacts/tools/preflight.sh ~/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls.conf
+sudo systemctl stop mosquitto
+~/post-quantum-iot-gateway/artifacts/tools/preflight.sh ~/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls.conf
+sudo mosquitto -c ~/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls.conf -v
+# a) Create systemd drop-in for mosquitto
+sudo mkdir -p /etc/systemd/system/mosquitto.service.d
+sudo tee /etc/systemd/system/mosquitto.service.d/10-preflight.conf >/dev/null <<'EOF'
+[Service]
+# Run your preflight before the broker starts.
+# If preflight fails (non-zero), mosquitto won’t start.
+ExecStartPre=/home/erikosmundsen13/post-quantum-iot-gateway/artifacts/tools/preflight.sh /home/erikosmundsen13/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls.conf
+EOF
+
+# b) Reload units and restart
+sudo systemctl daemon-reload
+sudo systemctl restart mosquitto
+# c) Quick check
+systemctl status mosquitto --no-pager -l
+journalctl -u mosquitto -n 50 --no-pager
+# add PATH and HOME defaults right after the shebang
+sudo sed -i '2a PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\n: "${HOME:=/home/erikosmundsen13}"'   ~/post-quantum-iot-gateway/artifacts/tools/preflight.sh
+# reload units and restart mosquitto (preflight will run first)
+sudo systemctl daemon-reload
+sudo systemctl restart mosquitto
+# confirm it's up and listening on 8884 and preflight didn't block it
+systemctl status mosquitto --no-pager -l | sed -n '1,80p'
+journalctl -u mosquitto -n 50 --no-pager
+sudo ss -tlnp | grep 8884 || echo "Port 8884 not listening"
+# Replace sudo-with-tty with systemd-friendly runuser
+sudo sed -i 's/sudo -u mosquitto/runuser -u mosquitto --/g'   /home/erikosmundsen13/post-quantum-iot-gateway/artifacts/tools/preflight.sh
+# Add debug (we'll remove it after)
+sudo sed -i '1a set -x'   /home/erikosmundsen13/post-quantum-iot-gateway/artifacts/tools/preflight.sh
+sudo /home/erikosmundsen13/post-quantum-iot-gateway/artifacts/tools/preflight.sh   /home/erikosmundsen13/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls.conf
+# remove the temporary 'set -x' line we added for debugging
+sudo sed -i '/^set -x$/d'   ~/post-quantum-iot-gateway/artifacts/tools/preflight.sh
+# make sure runuser exists (it should)
+command -v runuser || echo "runuser not found"
+# run preflight manually (should print PRECHECK: OK at the end)
+sudo ~/post-quantum-iot-gateway/artifacts/tools/preflight.sh   ~/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls.conf
+CONF=~/post-quantum-iot-gateway/artifacts/mosquitto/pqc-mtls.conf
+# 1) Show the three paths and port the preflight parses
+awk '!/^\s*#/{print}' "$CONF" | awk '
+  $1=="cafile"{print "CA=" $2}
+  $1=="certfile"{print "SRV=" $2}
+  $1=="keyfile"{print "KEY=" $2}
+  $1=="listener"{print "PORT=" $2}
+  $1=="tls_version"{print "TLSVER=" $2}
+'
+# 2) Files exist?
+eval $(awk '!/^\s*#/{print}' "$CONF" | awk '
+  $1=="cafile"{print "CA=" $2}
+  $1=="certfile"{print "SRV=" $2}
+  $1=="keyfile"{print "KEY=" $2}
+')
+echo; echo "== ls -l =="
+ls -l "$CA" "$SRV" "$KEY"
+# 3) Any SHA-1?
+echo; echo "== digest check =="
+openssl x509 -in "$CA"  -noout -text | grep -i 'Signature Algorithm' | head -1
+openssl x509 -in "$SRV" -noout -text | grep -i 'Signature Algorithm' | head -1
+# 4) Chain verify?
+echo; echo "== openssl verify =="
+openssl verify -CAfile "$CA" "$SRV" || echo "VERIFY_FAILED"
+# 5) Can mosquitto read them (without sudo / tty)?
+echo; echo "== runuser read checks =="
+runuser -u mosquitto -- head -c1 "$CA"  >/dev/null 2>&1 && echo "mosquitto: CA OK"  || echo "mosquitto: CA NOREAD"
+runuser -u mosquitto -- head -c1 "$SRV" >/dev/null 2>&1 && echo "mosquitto: SRV OK" || echo "mosquitto: SRV NOREAD"
+runuser -u mosquitto -- head -c1 "$KEY" >/dev/null 2>&1 && echo "mosquitto: KEY OK" || echo "mosquitto: KEY NOREAD"
+# 6) Traverse check (only if a NOREAD showed up)
+echo; echo "== namei (path walk) =="
+namei -l "$CA"
+# 1) Create standard system dirs
+sudo mkdir -p /etc/mosquitto/pqc/{ca,server,client}
+# 2) Copy the working files from your repo
+sudo cp ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/ca/ca_cert.pem         /etc/mosquitto/pqc/ca/
+sudo cp ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/server/server_{cert,key}.pem         /etc/mosquitto/pqc/server/
+sudo cp ~/post-quantum-iot-gateway/artifacts/tls/secure_rebuild/client/client_{cert,key}.pem         /etc/mosquitto/pqc/client/
+# 3) Ownership + tight perms (server key is sensitive)
+sudo chown -R root:mosquitto /etc/mosquitto/pqc
+sudo find /etc/mosquitto/pqc -type d -exec chmod 750 {} \;
+sudo chmod 644 /etc/mosquitto/pqc/ca/ca_cert.pem                /etc/mosquitto/pqc/server/server_cert.pem                /etc/mosquitto/pqc/client/client_cert.pem
+sudo chmod 640 /etc/mosquitto/pqc/server/server_key.pem
+# 4) Create a dedicated TLS 1.3 mTLS listener config
+sudo tee /etc/mosquitto/conf.d/pqc-mtls.conf >/dev/null <<'EOF'
+listener 8884
+protocol mqtt
+tls_version tlsv1.3
+
+cafile   /etc/mosquitto/pqc/ca/ca_cert.pem
+certfile /etc/mosquitto/pqc/server/server_cert.pem
+keyfile  /etc/mosquitto/pqc/server/server_key.pem
+
+require_certificate true
+use_identity_as_username true
+EOF
+
+# 5) Update systemd drop-in to run preflight without arguments
+sudo tee /etc/systemd/system/mosquitto.service.d/10-preflight.conf >/dev/null <<'EOF'
+[Service]
+ExecStartPre=/home/erikosmundsen13/post-quantum-iot-gateway/artifacts/tools/preflight.sh
+EOF
+
+# 6) Reload systemd, then restart mosquitto (preflight runs first)
+sudo systemctl daemon-reload
+sudo systemctl restart mosquitto
+cd ~/post-quantum-iot-gateway
+git checkout -b docs/arduino-setup
+mkdir -p docs
+nano docs/arduino-nano-esp32-setup.md
+git add docs/arduino-nano-esp32-setup.md
+git add README.md
+git commit -m "Add Arduino Nano ESP32 integration guide to documentation"
+git push origin docs/arduino-setup
+cd ~/post-quantum-iot-gateway
+# Create folders for API and sensor publisher
+mkdir -p api
+mkdir -p scripts/sensor-publish
+mkdir -p artifacts/tls/ca
+mkdir -p artifacts/tls/client
+# If not already there, copy your working certs
+cp ~/mqtt_certs/ca.crt artifacts/tls/ca/
+cp ~/mqtt_certs/client.crt artifacts/tls/client/
+cp ~/mqtt_certs/client.key artifacts/tls/client/
+ls ~/post-quantum-iot-gateway/artifacts/tls/
+cp ~/post-quantum-iot-gateway/artifacts/tls/ca/ca.crt    ~/post-quantum-iot-gateway/artifacts/tls/ca/
+cp ~/post-quantum-iot-gateway/artifacts/tls/client/client.crt    ~/post-quantum-iot-gateway/artifacts/tls/client/
+cp ~/post-quantum-iot-gateway/artifacts/tls/client/client.key    ~/post-quantum-iot-gateway/artifacts/tls/client/
+nano ~/post-quantum-iot-gateway/scripts/sensor-publish/dht11_to_mqtt.py
+cd ~/post-quantum-iot-gateway
+# Create placeholders
+mkdir -p api
+mkdir -p scripts/sensor-publish
+find ~/post-quantum-iot-gateway -name "*.crt"
+find ~/post-quantum-iot-gateway -name "*.key"
+post-quantum-iot-gateway/artifacts/tls/ca/
+post-quantum-iot-gateway/artifacts/tls/client/
+nano ~/post-quantum-iot-gateway/.env.template
+cd ~/post-quantum-iot-gateway
+cp .env.template .env
+source ~/sensor-env/bin/activate
+pip install python-dotenv
+deactivate
+python3 -m venv ~/sensor-env
+ls ~/sensor-env/
+source ~/sensor-env/bin/activate
+pip install python-dotenv paho-mqtt adafruit-circuitpython-dht
+sudo apt install libgpiod2
+sudo apt install libgpiod3
+source ~/sensor-env/bin/activate
+python3 dht11_to_mqtt.py
+cd ~/post-quantum-iot-gateway/scripts/sensor-publish
+python3 dht11_to_mqtt.py
+pip install RPi.GPIO
+python3 dht11_to_mqtt.py
+nano ~/post-quantum-iot-gateway/scripts/sensor-publish/dht11_to_mqtt.py
+python3 dht11_to_mqtt.py
+ls ~/post-quantum-iot-gateway/artifacts/tls/ca/ca.crt
+ls ~/post-quantum-iot-gateway/artifacts/tls/client/client.crt
+ls ~/post-quantum-iot-gateway/artifacts/tls/client/client.key
+nano ~/post-quantum-iot-gateway/scripts/sensor-publish/dht11_to_mqtt.py
+python3 dht11_to_mqtt.py
+nano ~/post-quantum-iot-gateway/scripts/sensor-publish/dht11_to_mqtt.py
+python3 dht11_to_mqtt.py
+nano ~/post-quantum-iot-gateway/scripts/sensor-publish/dht11_to_mqtt.py
+python3 dht11_to_mqtt.py
+nano ~/post-quantum-iot-gateway/scripts/sensor-publish/dht11_to_mqtt.py
+python3 dht11_to_mqtt.py
+nano ~/post-quantum-iot-gateway/scripts/sensor-publish/dht11_to_mqtt.py
+python3 dht11_to_mqtt.py
+nano ~/post-quantum-iot-gateway/scripts/sensor-publish/dht11_to_mqtt.py
+python3 dht11_to_mqtt.py
+nano ~/post-quantum-iot-gateway/scripts/sensor-publish/dht11_to_mqtt.py
+python3 dht11_to_mqtt.py
+nano ~/post-quantum-iot-gateway/scripts/sensor-publish/dht11_to_mqtt.py
+python3 dht11_to_mqtt.py
+nano ~/post-quantum-iot-gateway/scripts/sensor-publish/dht11_to_mqtt.py
+python3 dht11_to_mqtt.py
+nano ~/post-quantum-iot-gateway/scripts/sensor-publish/dht11_to_mqtt.py
+python3 dht11_to_mqtt.py
+cd ~/post-quantum-iot-gateway
+git checkout -b feature/secure-sensor-publisher
+git add scripts/sensor-publish/dht11_to_mqtt.py
+git add .env.template
+git add scripts/sensor-publish/README.md
+git push origin feature/secure-sensor-publisher
+cd ~/post-quantum-iot-gateway
+source ~/sensor-env/bin/activate
+mv /mnt/data/api_extracted/gateway_api ./api
+ls /mnt/data/api_extracted
+mv /mnt/data/team1_api_bundle_contents/gateway_api ~/post-quantum-iot-gateway/api
+scp -r gateway_api/ erikosmundsen13@192.168.4.60:~/post-quantum-iot-gateway/api
+ls ~/post-quantum-iot-gateway/api
+mv ~/post-quantum-iot-gateway/api/gateway_api/* ~/post-quantum-iot-gateway/api/
+rmdir ~/post-quantum-iot-gateway/api/gateway_api
+ls ~/post-quantum-iot-gateway/api
+mosquitto_sub -h localhost -p 8884 -t "team1/#" -d   --cafile ~/post-quantum-iot-gateway/artifacts/tls/ca/ca.crt   --cert   ~/post-quantum-iot-gateway/artifacts/tls/client/client.crt   --key    ~/post-quantum-iot-gateway/artifacts/tls/client/client.key   --tls-version tlsv1.3
+cat /etc/mosquitto/conf.d/secure_tls.conf
+openssl verify -CAfile ~/post-quantum-iot-gateway/artifacts/tls/ca/ca.crt   ~/post-quantum-iot-gateway/artifacts/tls/client/client.crt
+sudo nano /etc/mosquitto/conf.d/secure_tls.conf
+sudo systemctl restart mosquitto
+sudo journalctl -xeu mosquitto.service
+sudo mosquitto -c /etc/mosquitto/mosquitto.conf -v
+cat /etc/mosquitto/conf.d/secure_tls.conf
+sudo mosquitto -c /etc/mosquitto/mosquitto.conf -v
+sudo chown mosquitto: /home/erikosmundsen13/post-quantum-iot-gateway/artifacts/tls/server/server.key
+sudo chmod 640 /home/erikosmundsen13/post-quantum-iot-gateway/artifacts/tls/server/server.key
+sudo systemctl restart mosquitto
+sudo journalctl -xeu mosquitto.service | tail -n 20
+ls -l /home/erikosmundsen13/post-quantum-iot-gateway/artifacts/tls/server/server.key
+sudo mosquitto -c /etc/mosquitto/mosquitto.conf -v
+sudo mv /etc/mosquitto/conf.d/pqc-mtls.conf /etc/mosquitto/conf.d/pqc-mtls.conf.disabled
+sudo systemctl restart mosquitto
+sudo systemctl status mosquitto
+cd ~/post-quantum-iot-gateway/scripts/sensor-publish
+source ~/sensor-env/bin/activate
+python3 dht11_to_mqtt.py
+sudo systemctl status mosquitto
+nano ~/post-quantum-iot-gateway/api/app.py
+source ~/sensor-env/bin/activate
+cd ~/post-quantum-iot-gateway/api
+python3 -m uvicorn app:app --host 0.0.0.0 --port 8000
+pip install fastapi uvicorn paho-mqtt python-dotenv
+cd ~/post-quantum-iot-gateway/api
+python3 -m uvicorn app:app --host 0.0.0.0 --port 8000
+nano ~/post-quantum-iot-gateway/api/app.py
+python3 -m uvicorn app:app --host 0.0.0.0 --port 8000
+nano ~/post-quantum-iot-gateway/api/app.py
+cat ~/post-quantum-iot-gateway/api/app.py
+python3 -m uvicorn app:app --host 0.0.0.0 --port 8000
+openssl s_client -connect localhost:8884 -cert artifacts/tls/client/client.crt -key artifacts/tls/client/client.key -CAfile artifacts/tls/ca/ca.crt -tls1_3
+openssl s_client   -connect localhost:8884   -cert ../artifacts/tls/client/client.crt   -key  ../artifacts/tls/client/client.key   -CAfile ../artifacts/tls/ca/ca.crt   -tls1_3
+nano ~/post-quantum-iot-gateway/api/app.py
+python3 -m uvicorn app:app --host 0.0.0.0 --port 8000
+cat ~/post-quantum-iot-gateway/api/app.py
+nano ~/post-quantum-iot-gateway/api/app.py
+python3 -m uvicorn app:app --host 0.0.0.0 --port 8000
+cat ~/post-quantum-iot-gateway/api/app.py
+nano ~/post-quantum-iot-gateway/api/app.py
+python3 -m uvicorn app:app --host 0.0.0.0 --port 8000
+cat ~/post-quantum-iot-gateway/api/app.py
+ls -l ~/post-quantum-iot-gateway/artifacts/tls/ca/ca.crt
+ls -l ~/post-quantum-iot-gateway/artifacts/tls/client/client.crt
+ls -l ~/post-quantum-iot-gateway/artifacts/tls/client/client.key
+nano ~/post-quantum-iot-gateway/api/app.py
+python3 -m uvicorn app:app --host 0.0.0.0 --port 8000
+cd ~/post-quantum-iot-gateway/api
+python3 -m uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+source ~/sensor-env/bin/activate
+cd ~/post-quantum-iot-gateway/scripts/sensor-publish
+python3 dht11_to_mqtt.py
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+# send 60 messages, one per second, varying temperature/humidity
+for i in $(seq 1 60); do
+  T=$(python3 - <<'PY'
+import random; print(round(24.0 + random.uniform(-0.6,0.6), 2))
+PY
+
+)
+  H=$(python3 - <<'PY'
+import random; print(int(34 + random.uniform(-1,2)))
+PY
+
+);   mosquitto_pub -h 127.0.0.1 -p 8884 --tls-version tlsv1.3     --cafile ../certs/out/ca.crt     --cert   ../certs/classic/client.crt     --key    ../certs/classic/client.key     -t team1/sensor -m "{\"temperature\":${T},\"humidity\":${H}}" -q 1;   sleep 1; done
+cd ~/post-quantum-iot-gateway
+git checkout -b feature/api-pqc-secure
+git add api/app.py
+git commit -m "API: secure TLS to PQC MQTT; paths fixed; verified team1/# telemetry pipeline"
+git push origin feature/api-pqc-secure
+cd ~/post-quantum-iot-gateway/software/pqc_env && source ./pqc_env.sh
+mosquitto_pub -h localhost -p 8884 --tls-version tlsv1.3   --cafile ../certs/out/ca.crt   --cert   ../certs/classic/client.crt   --key    ../certs/classic/client.key   -t test/pqc -m "PQC hybrid KEX + composite server chain + classic client-auth ✅" -q 1
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+cd ~/post-quantum-iot-gateway
+python3 -m pip install --upgrade fastapi uvicorn paho-mqtt  # once
+uvicorn api.app:app --host 0.0.0.0 --port 8000 --reload
+cd ~/post-quantum-iot-gateway
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip wheel
+pip install "uvicorn[standard]" fastapi paho-mqtt
+source software/pqc_env/pqc_env.sh
+uvicorn api.app:app --host 0.0.0.0 --port 8000 --reload
+sudo ss -ltnp | grep -E ':8883|:8884' || echo "no listeners on 8883/8884"
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+# subscriber
+mosquitto_sub -h localhost -p 8884 --tls-version tlsv1.3   --cafile ../certs/out/ca.crt   --cert   ../certs/classic/client.crt   --key    ../certs/classic/client.key   -t team1/sensor -q 1 &
+sleep 1
+# publisher
+mosquitto_pub -h localhost -p 8884 --tls-version tlsv1.3   --cafile ../certs/out/ca.crt   --cert   ../certs/classic/client.crt   --key    ../certs/classic/client.key   -t team1/sensor -m '{"temperature":24.4,"humidity":35}' -q 1
+cd ~/post-quantum-iot-gateway          # your repo root
+source .venv/bin/activate              # activate FastAPI virtual-env
+source software/pqc_env/pqc_env.sh     # load PQC OpenSSL env
+nano api/app.py
+cd ~/post-quantum-iot-gateway
+uvicorn api.app:app --host 0.0.0.0 --port 8000 --reload
+cd ~/post-quantum-iot-gateway
+source .venv/bin/activate
+source software/pqc_env/pqc_env.sh
+uvicorn api.app:app --host 0.0.0.0 --port 8000 --reload
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+mosquitto_pub -h 127.0.0.1 -p 8884 --tls-version tlsv1.3   --cafile ../certs/out/ca.crt   --cert   ../certs/classic/client.crt   --key    ../certs/classic/client.key   -t team1/sensor -m '{"temperature":24.4,"humidity":35}' -q 1
+# in the pqc_env terminal
+mosquitto_sub -h 127.0.0.1 -p 8884 --tls-version tlsv1.3   --cafile ../certs/out/ca.crt   --cert   ../certs/classic/client.crt   --key    ../certs/classic/client.key   -t team1/# -q 1
+# in the pqc_env terminal
+mosquitto_sub -h 127.0.0.1 -p 8884 --tls-version tlsv1.3   --cafile ../certs/out/ca.crt   --cert   ../certs/classic/client.crt   --key    ../certs/classic/client.key   -t team1/# -q 1
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+# add -v for verbose so you definitely see lines
+mosquitto_sub -v -h 127.0.0.1 -p 8884 --tls-version tlsv1.3   --cafile ../certs/out/ca.crt   --cert   ../certs/classic/client.crt   --key    ../certs/classic/client.key   -t team1/# -q 1
+cd ~/post-quantum-iot-gateway/software/pqc_env && source ./pqc_env.sh
+# Try 8884
+mosquitto_sub -h localhost -p 8884 --tls-version tlsv1.3   --cafile ../certs/out/ca.crt   --cert   ../certs/out-ec/client.crt   --key    ../certs/out-ec/client.key   -t test/pqc -q 1
+cd ~/post-quantum-iot-gateway/software/pqc_env && source ./pqc_env.sh
+mosquitto_sub -h localhost -p 8884 --tls-version tlsv1.3   --cafile ../certs/out/ca.crt   --cert   ../certs/classic/client.crt   --key    ../certs/classic/client.key   -t test/pqc -q 1
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+# Present the CLASSIC client cert (signed by classic CA),
+# and trust the COMPOSITE CA for the SERVER:
+openssl s_client -connect localhost:8884 -tls1_3   -cert ../certs/classic/client.crt -key ../certs/classic/client.key   -CAfile ../certs/out/ca.crt </dev/null
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+openssl s_client -connect localhost:8884 -tls1_3   -cert ../certs/classic/client.crt -key ../certs/classic/client.key   -CAfile ../certs/out/ca.crt </dev/null |   sed -n '/Verify return code/,$p'
+cd ~/post-quantum-iot-gateway/software/pqc_env && source ./pqc_env.sh
+mosquitto_sub -h localhost -p 8884 --tls-version tlsv1.3   --cafile ../certs/out/ca.crt   --cert   ../certs/classic/client.crt   --key    ../certs/classic/client.key   -t test/pqc -q 1
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+mosquitto_sub -d -h localhost -p 8884 --tls-version tlsv1.3   --cafile ../certs/out/ca.crt   --cert   ../certs/classic/client.crt   --key    ../certs/classic/client.key   -t test/pqc -q 1
+ls -l ~/post-quantum-iot-gateway/software/certs/out/ca.crt       ~/post-quantum-iot-gateway/software/certs/classic/client.crt       ~/post-quantum-iot-gateway/software/certs/classic/client.key
+cd ~/post-quantum-iot-gateway/software/pqc_env && source ./pqc_env.sh
+openssl s_client -connect localhost:8884 -tls1_3 </dev/null 2>/dev/null |   grep -i -E "Negotiated TLS1.3 group|group:|key exchange|kx"
+cd ~/post-quantum-iot-gateway/software/pqc_env && source ./pqc_env.sh
+mosquitto_sub -d -h localhost -p 8884 --tls-version tlsv1.3   --cafile ../certs/out/ca.crt   --cert   ../certs/classic/client.crt   --key    ../certs/classic/client.key   -t test/pqc -q 1
+# Terminal 2
+cd ~/post-quantum-iot-gateway
+source .venv/bin/activate
+source software/pqc_env/pqc_env.sh
+uvicorn api.app:app --host 0.0.0.0 --port 8000 --reload
+sudo ss -ltnp | grep 8885
+source ~/sensor-env/bin/activate
+cd ~/post-quantum-iot-gateway/scripts/sensor-publish
+nano dht11_to_mqtt.py
+python3 dht11_to_mqtt.py
+nano ~/post-quantum-iot-gateway/api/app.py
+cat ~/post-quantum-iot-gateway/api/app.py
+less ~/post-quantum-iot-gateway/api/app.py
+cat ~/post-quantum-iot-gateway/api/app.py
+nano ~/post-quantum-iot-gateway/api/app.py
+cd ~/post-quantum-iot-gateway/api
+python3 -m uvicorn app:app --host 0.0.0.0 --port 8000
+# Make sure you're in the repo
+cd ~/post-quantum-iot-gateway
+# Create a new branch for integration changes
+git checkout -b feature/full-gateway-integration
+# Add the updated files
+git add api/app.py
+git add scripts/sensor-publish/dht11_to_mqtt.py
+git add artifacts/tls/ca/ca.crt artifacts/tls/client/client.crt artifacts/tls/client/client.key
+git add .env.template
+# Commit the changes
+git commit -m "feat: integrate secure sensor publisher and dashboard API with working mTLS and real-time MQTT data"
+# Push the branch to GitHub
+git push origin feature/full-gateway-integration
+cd ~/post-quantum-iot-gateway
+git checkout main
+git pull origin main
+git checkout -b feature/pqc-integration
+git push origin feature/pqc-integration
+cd ~/post-quantum-iot-gateway/software
+mkdir -p pqc_env
+cd pqc_env
+nano pqc_env.sh
+chmod +x pqc_env.sh
+nano pqc_openssl.cnf
+source pqc_env.sh
+cd ~/post-quantum-iot-gateway/software
+mkdir -p certs/out
+cd certs
+nano pqc_make_certs.sh
+chmod +x pqc_make_certs.sh
+source ../pqc_env/pqc_env.sh
+./pqc_make_certs.sh
+nano ~/post-quantum-iot-gateway/software/pqc_env/pqc_env.sh
+source ~/post-quantum-iot-gateway/software/pqc_env/pqc_env.sh
+echo "$OPENSSL_CONF"   # should print .../software/pqc_env/pqc_openssl.cnf
+cd ~/post-quantum-iot-gateway/software/certs
+source ../pqc_env/pqc_env.sh
+./pqc_make_certs.sh
+mundsen13@raspberrypi:~/post-quantum-iot-gateway/software/certs $
+# Reload env (just to be sure)
+source ~/post-quantum-iot-gateway/software/pqc_env/pqc_env.sh
+echo "== Providers =="
+openssl list -providers -verbose
+echo
+echo "== Signature algorithms (first 50) =="
+openssl list -signature-algorithms | head -n 50
+echo
+echo "== KEM groups (if supported) =="
+openssl list -kem-algorithms 2>/dev/null | head -n 50 || true
+echo
+echo "== OQS module path check =="
+echo "OPENSSL_MODULES=$OPENSSL_MODULES"
+ls -l "$OPENSSL_MODULES"/oqsprovider.so 2>/dev/null || echo "oqsprovider.so not found here"
+sudo apt update
+sudo apt install -y git cmake ninja-build build-essential perl python3 pkg-config                     libssl-dev
+cd ~
+git clone https://github.com/open-quantum-safe/liboqs.git
+cd liboqs
+mkdir build && cd build
+cmake -GNinja ..   -DBUILD_SHARED_LIBS=ON   -DCMAKE_INSTALL_PREFIX=/opt/oqsprovider   -DOQS_DIST_BUILD=ON   -DOQS_MINIMAL_BUILD=ON   -DOQS_KEM_KYBER_768=ON   -DOQS_SIG_DILITHIUM_3=ON
+ninja
+sudo ninja install
+# Start clean
+cd ~/liboqs
+rm -rf build
+mkdir build && cd build
+# Reconfigure WITHOUT OQS_MINIMAL_BUILD and specific alg toggles
+cmake -GNinja ..   -DBUILD_SHARED_LIBS=ON   -DCMAKE_INSTALL_PREFIX=/opt/oqsprovider   -DOQS_DIST_BUILD=ON
+# Build + install
+ninja
+sudo ninja install
+nano ~/post-quantum-iot-gateway/software/pqc_env/pqc_openssl.cnf
+source ~/post-quantum-iot-gateway/software/pqc_env/pqc_env.sh
+# Provider should list "oqs"
+openssl list -providers -verbose | sed -n '1,200p'
+# You should now see sig algs incl. dilithium3, falcon*, etc.
+openssl list -signature-algorithms | head -n 80
+# Check supported groups (names vary by build)
+openssl s_client -groups 2>/dev/null | sed -n '1,200p'
+nano ~/post-quantum-iot-gateway/software/pqc_env/pqc_openssl.cnf
+source ~/post-quantum-iot-gateway/software/pqc_env/pqc_env.sh
+# Provider should list "oqs"
+openssl list -providers -verbose | sed -n '1,200p'
+# You should now see sig algs incl. dilithium3, falcon*, etc.
+openssl list -signature-algorithms | head -n 80
+# Check supported groups (names vary by build)
+openssl s_client -groups 2>/dev/null | sed -n '1,200p'
+cd ~
+[ -d oqs-provider ] || git clone https://github.com/open-quantum-safe/oqs-provider.git
+cd oqs-provider
+rm -rf build
+mkdir build && cd build
+cmake -GNinja ..   -DCMAKE_INSTALL_PREFIX=/opt/oqsprovider   -DOPENSSL_ROOT_DIR=/usr   -DOPENSSL_MODULES_DIR=/opt/oqsprovider/lib/ossl-modules   -DOQS_ROOT=/opt/oqsprovider
+ninja
+sudo ninja install
+ls -l /opt/oqsprovider/lib/ossl-modules/oqsprovider.so
+nano ~/post-quantum-iot-gateway/software/pqc_env/pqc_openssl.cnf
+nano ~/post-quantum-iot-gateway/software/pqc_env/pqc_env.sh
+source ~/post-quantum-iot-gateway/software/pqc_env/pqc_env.sh
+# 1) Make sure your OpenSSL config points to the real provider .so
+sed -n '1,160p' ~/post-quantum-iot-gateway/software/pqc_env/pqc_openssl.cnf
+# If the [oqs_sect] doesn't have this exact line, edit the file and add it:
+#   module = /usr/lib/aarch64-linux-gnu/ossl-modules/oqsprovider.so
+#
+# Quick edit command if needed:
+# nano ~/post-quantum-iot-gateway/software/pqc_env/pqc_openssl.cnf
+# Register liboqs install path and refresh the linker cache
+echo '/opt/oqsprovider/lib' | sudo tee /etc/ld.so.conf.d/oqsprovider.conf
+sudo ldconfig
+# Confirm the cache now knows about liboqs
+ldconfig -p | grep -i oqs || echo "# Confirm the cache now knows about liboqs liboqs not visible to linker"
+sed -n '1,200p' ~/post-quantum-iot-gateway/software/pqc_env/pqc_env.sh
+source ~/post-quantum-iot-gateway/software/pqc_env/pqc_env.sh
+OPENSSL_CONF=~/post-quantum-iot-gateway/software/pqc_env/pqc_openssl.cnf OPENSSL_TRACE=provider openssl version
+ldd /usr/lib/aarch64-linux-gnu/ossl-modules/oqsprovider.so
+# Show current values
+echo "$OPENSSL_CONF"
+echo "$OPENSSL_MODULES"
+# If OPENSSL_MODULES is not the system path, fix it or unset it:
+export OPENSSL_MODULES="/usr/lib/aarch64-linux-gnu/ossl-modules"
+# (Or: unset OPENSSL_MODULES)
+# Reload your PQC env to keep things consistent
+source ~/post-quantum-iot-gateway/software/pqc_env/pqc_env.sh
+openssl list -providers -verbose | sed -n '1,200p'
+cd ~/post-quantum-iot-gateway/software/certs
+source ../pqc_env/pqc_env.sh
+./pqc_make_certs.sh
+source ~/post-quantum-iot-gateway/software/pqc_env/pqc_env.sh
+openssl list -signature-algorithms | egrep -i 'dilithium|mldsa'
+sed -i 's/-algorithm mldsa65/-algorithm p384_mldsa65/g'   ~/post-quantum-iot-gateway/software/certs/pqc_make_certs.sh
+sed -i 's/-algorithm dilithium3/-algorithm p384_mldsa65/g'   ~/post-quantum-iot-gateway/software/certs/pqc_make_certs.sh
+nano ~/post-quantum-iot-gateway/software/certs/pqc_make_certs.sh
+chmod +x ~/post-quantum-iot-gateway/software/certs/pqc_make_certs.sh
+cd ~/post-quantum-iot-gateway/software/certs
+source ../pqc_env/pqc_env.sh
+./pqc_make_certs.sh
+# 1) Do we already have certs?
+ls -l ~/post-quantum-iot-gateway/software/certs/out
+# 1) Do we already have certs?
+ls -l ~/post-quantum-iot-gateway/software/certs/out
+cd ~/post-quantum-iot-gateway/software/certs
+source ../pqc_env/pqc_env.sh
+OUT=out
+PROVPATH="/usr/lib/aarch64-linux-gnu/ossl-modules"
+SIGALG="p384_mldsa65"   # your build shows this one
+mkdir -p "$OUT"
+rm -f "$OUT"/ca.* "$OUT"/server.* "$OUT"/client.* "$OUT"/*.srl
+# CA key
+openssl genpkey -algorithm "$SIGALG"   -provider oqs -provider-path "$PROVPATH"   -out "$OUT/ca.key"
+# CA cert (self-signed)
+openssl req -x509 -new -key "$OUT/ca.key"   -subj "/CN=PQ Root CA" -days 3650   -provider oqs -provider-path "$PROVPATH"   -out "$OUT/ca.crt"
+# Inspect
+ls -l "$OUT/ca.key" "$OUT/ca.crt"
+cd ~/post-quantum-iot-gateway/software/certs
+source ../pqc_env/pqc_env.sh
+OUT=out
+PROVPATH="/usr/lib/aarch64-linux-gnu/ossl-modules"
+SIGALG="p384_mldsa65"   # confirmed on your box
+mkdir -p "$OUT"
+rm -f "$OUT"/ca.* "$OUT"/server.* "$OUT"/client.* "$OUT"/*.srl
+# Key
+openssl genpkey -algorithm "$SIGALG"   -provider oqs -provider default -provider-path "$PROVPATH"   -out "$OUT/ca.key"
+# Self-signed cert
+openssl req -x509 -new -key "$OUT/ca.key"   -subj "/CN=PQ Root CA" -days 3650   -provider oqs -provider default -provider-path "$PROVPATH"   -out "$OUT/ca.crt"
+ls -l "$OUT/ca.key" "$OUT/ca.crt"
+# Key
+openssl genpkey -algorithm "$SIGALG"   -provider oqs -provider default -provider-path "$PROVPATH"   -out "$OUT/server.key"
+# CSR
+openssl req -new -key "$OUT/server.key"   -subj "/CN=mosquitto-server"   -provider oqs -provider default -provider-path "$PROVPATH"   -out "$OUT/server.csr"
+# Sign with CA
+openssl x509 -req -in "$OUT/server.csr"   -CA "$OUT/ca.crt" -CAkey "$OUT/ca.key" -CAcreateserial   -days 825   -provider oqs -provider default -provider-path "$PROVPATH"   -out "$OUT/server.crt"
+ls -l "$OUT/server.key" "$OUT/server.crt"
+openssl genpkey -algorithm "$SIGALG"   -provider oqs -provider default -provider-path "$PROVPATH"   -out "$OUT/client.key"
+openssl req -new -key "$OUT/client.key"   -subj "/CN=pq-client"   -provider oqs -provider default -provider-path "$PROVPATH"   -out "$OUT/client.csr"
+openssl x509 -req -in "$OUT/client.csr"   -CA "$OUT/ca.crt" -CAkey "$OUT/ca.key" -CAcreateserial   -days 825   -provider oqs -provider default -provider-path "$PROVPATH"   -out "$OUT/client.crt"
+ls -l "$OUT/client.key" "$OUT/client.crt"
+openssl x509 -in "$OUT/server.crt" -noout -text | grep -i "Signature Algorithm" -A1
+cafile   /home/erikosmundsen13/post-quantum-iot-gateway/software/certs/out/ca.crt
+certfile /home/erikosmundsen13/post-quantum-iot-gateway/software/certs/out/server.crt
+keyfile  /home/erikosmundsen13/post-quantum-iot-gateway/software/certs/out/server.key
+nano ~/post-quantum-iot-gateway/software/mosquitto/mosquitto-pqc.conf
+mkdir -p ~/post-quantum-iot-gateway/software/mosquitto
+nano ~/post-quantum-iot-gateway/software/mosquitto/mosquitto-pqc.conf
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+mosquitto -c ../mosquitto/mosquitto-pqc.conf -v
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+OPENSSL_TRACE=provider,CONF,INIT mosquitto -c ../mosquitto/mosquitto-pqc.conf -v
+cd ~/post-quantum-iot-gateway/software/certs/out
+openssl x509 -in server.crt -noout -text | head -n 20
+openssl verify -CAfile ca.crt server.crt
+cd ~/post-quantum-iot-gateway/software/certs
+mkdir -p out-ec
+cd out-ec
+# EC server key + CSR
+openssl ecparam -name prime256v1 -genkey -noout -out server.key
+openssl req -new -key server.key -subj "/CN=mosquitto-server" -out server.csr
+# EC client key + CSR
+openssl ecparam -name prime256v1 -genkey -noout -out client.key
+openssl req -new -key client.key -subj "/CN=pq-client" -out client.csr
+nano ~/post-quantum-iot-gateway/software/pqc_env/pqc_openssl.cnf
+source ~/post-quantum-iot-gateway/software/pqc_env/pqc_env.sh
+cd ~/post-quantum-iot-gateway/software/certs
+mkdir -p out-ec
+cd out-ec
+# EC server key + CSR
+openssl ecparam -name prime256v1 -genkey -noout -out server.key
+openssl req -new -key server.key -subj "/CN=mosquitto-server" -out server.csr
+# EC client key + CSR
+openssl ecparam -name prime256v1 -genkey -noout -out client.key
+openssl req -new -key client.key -subj "/CN=pq-client" -out client.csr
+ls -l server.key client.key
+CA_DIR=~/post-quantum-iot-gateway/software/certs/out
+PROVPATH="/usr/lib/aarch64-linux-gnu/ossl-modules"
+# Server cert
+openssl x509 -req -in server.csr   -CA "$CA_DIR/ca.crt" -CAkey "$CA_DIR/ca.key" -CAcreateserial   -days 825   -provider oqs -provider default -provider-path "$PROVPATH"   -out server.crt
+# Client cert
+openssl x509 -req -in client.csr   -CA "$CA_DIR/ca.crt" -CAkey "$CA_DIR/ca.key" -CAcreateserial   -days 825   -provider oqs -provider default -provider-path "$PROVPATH"   -out client.crt
+# Quick inspect: EC public key + composite signature on the cert
+openssl x509 -in server.crt -noout -text | grep -E "Public Key Algorithm|Signature Algorithm" -A1
+nano ~/post-quantum-iot-gateway/software/mosquitto/mosquitto-pqc-min.conf
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+mosquitto -c ../mosquitto/mosquitto-pqc-min.conf -v
+sudo ss -ltnp | grep -E ':8883|:8884' || true
+# Stop systemd service if it’s running
+sudo systemctl stop mosquitto 2>/dev/null || true
+# Kill any leftover foreground mosquitto processes (from previous terminals)
+pkill -x mosquitto 2>/dev/null || true
+# Verify ports are free now
+sudo ss -ltnp | grep -E ':8883|:8884' || echo "8883/8884 are free"
+nano ~/post-quantum-iot-gateway/software/mosquitto/mosquitto-pqc.conf
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+mosquitto -c ../mosquitto/mosquitto-pqc.conf -v
+cd ~/post-quantum-iot-gateway/software/certs
+mkdir -p classic && cd classic
+# Classic ECDSA CA
+openssl ecparam -name prime256v1 -genkey -noout -out ca.key
+openssl req -x509 -new -key ca.key -subj "/CN=Classic Root CA" -days 3650 -out ca.crt
+# Classic ECDSA client
+openssl ecparam -name prime256v1 -genkey -noout -out client.key
+openssl req -new -key client.key -subj "/CN=pq-client-classic" -out client.csr
+openssl x509 -req -in client.csr -CA ca.crt -CAkey ca.key -CAcreateserial -days 825 -out client.crt
+nano ~/post-quantum-iot-gateway/software/mosquitto/mosquitto-pqc.conf
+sudo systemctl stop mosquitto 2>/dev/null || true
+pkill -x mosquitto 2>/dev/null || true
+sudo ss -ltnp | grep -E ':8883|:8884' || echo "8883/8884 are free"
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+mosquitto -c ../mosquitto/mosquitto-pqc.conf -v
+grep -nE 'listener|cafile|certfile|keyfile|require_certificate'   ~/post-quantum-iot-gateway/software/mosquitto/mosquitto-pqc.conf
+sudo systemctl stop mosquitto 2>/dev/null || true
+pkill -x mosquitto 2>/dev/null || true
+sudo ss -ltnp | grep -E ':8883|:8884' || echo "8883/8884 are free"
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+mosquitto -c ../mosquitto/mosquitto-pqc.conf -v
+cat > ~/post-quantum-iot-gateway/software/certs/ca_v3.cnf <<'EOF'
+[ v3_ca ]
+basicConstraints = critical, CA:true
+keyUsage = critical, keyCertSign, cRLSign
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid:always,issuer:always
+EOF
+
+cd ~/post-quantum-iot-gateway/software/certs
+source ../pqc_env/pqc_env.sh
+OUT=out
+PROVPATH="/usr/lib/aarch64-linux-gnu/ossl-modules"
+SIGALG="p384_mldsa65"
+cd "$OUT"
+rm -f ca.crt ca.key ca.srl
+# New CA key (composite sig alg) + self-signed CA cert with v3_ca
+openssl genpkey -algorithm "$SIGALG"   -provider oqs -provider default -provider-path "$PROVPATH"   -out ca.key
+openssl req -x509 -new -key ca.key   -subj "/CN=PQ Root CA" -days 3650   -provider oqs -provider default -provider-path "$PROVPATH"   -extfile ../ca_v3.cnf -extensions v3_ca   -out ca.crt
+# Sanity: confirm CA:true appears
+openssl x509 -in ca.crt -noout -text | grep -A2 "Basic Constraints"
+cd ~/post-quantum-iot-gateway/software/certs/out
+source ../pqc_env/pqc_env.sh
+PROVPATH="/usr/lib/aarch64-linux-gnu/ossl-modules"
+SIGALG="p384_mldsa65"
+# start clean
+rm -f ca.key ca.crt ca.srl
+# CA key (composite signature algorithm)
+openssl genpkey -algorithm "$SIGALG"   -provider oqs -provider default -provider-path "$PROVPATH"   -out ca.key
+# Self-signed CA cert WITH CA extensions (note the -addext lines)
+openssl req -x509 -new -key ca.key   -subj "/CN=PQ Root CA" -days 3650   -addext "basicConstraints=critical,CA:true"   -addext "keyUsage=critical,keyCertSign,cRLSign"   -addext "subjectKeyIdentifier=hash"   -addext "authorityKeyIdentifier=keyid:always,issuer:always"   -provider oqs -provider default -provider-path "$PROVPATH"   -out ca.crt
+# sanity — must show CA:TRUE
+openssl x509 -in ca.crt -noout -text | grep -A2 "Basic Constraints"
+LEAF_DIR=~/post-quantum-iot-gateway/software/certs/out-ec
+# Re-sign server leaf (EC public key; composite CA signature)
+openssl x509 -req -in "$LEAF_DIR/server.csr"   -CA ./ca.crt -CAkey ./ca.key -CAcreateserial   -days 825   -provider oqs -provider default -provider-path "$PROVPATH"   -out "$LEAF_DIR/server.crt"
+# quick inspect: EC public key + p384_mldsa65 signature
+openssl x509 -in "$LEAF_DIR/server.crt" -noout -text |   egrep -A1 "Public Key Algorithm|Signature Algorithm"
+sudo systemctl stop mosquitto 2>/dev/null || true
+pkill -x mosquitto 2>/dev/null || true
+sudo ss -ltnp | grep -E ':8883|:8884' || echo "8883/8884 are free"
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+mosquitto -c ../mosquitto/mosquitto-pqc.conf -v
+cd ~/post-quantum-iot-gateway/software/certs/classic
+# Backup old files (optional)
+mkdir -p backup && cp -a ca.* backup/ 2>/dev/null || true
+# Re-issue CA properly
+rm -f ca.key ca.crt ca.srl
+openssl ecparam -name prime256v1 -genkey -noout -out ca.key
+openssl req -x509 -new -key ca.key -subj "/CN=Classic Root CA" -days 3650   -addext "basicConstraints=critical,CA:true"   -addext "keyUsage=critical,keyCertSign,cRLSign"   -addext "subjectKeyIdentifier=hash"   -addext "authorityKeyIdentifier=keyid:always,issuer:always"   -out ca.crt
+# sanity
+openssl x509 -in ca.crt -noout -text | grep -A2 "Basic Constraints"
+cd ~/post-quantum-iot-gateway/software/certs/classic
+# Backup old client (optional)
+cp -a client.* backup/ 2>/dev/null || true
+# Recreate client key + CSR
+rm -f client.key client.crt client.csr
+openssl ecparam -name prime256v1 -genkey -noout -out client.key
+openssl req -new -key client.key -subj "/CN=pq-client-classic" -out client.csr
+# Create v3 client profile with EKU clientAuth
+cat > client_v3.cnf <<'EOF'
+[ v3_client ]
+basicConstraints = critical, CA:false
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = clientAuth
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid,issuer
+EOF
+
+# Sign client with classic CA + v3 client extensions
+openssl x509 -req -in client.csr   -CA ca.crt -CAkey ca.key -CAcreateserial -days 825   -extfile client_v3.cnf -extensions v3_client   -out client.crt
+# sanity
+openssl x509 -in client.crt -noout -text | grep -A2 "Extended Key Usage"
+sudo systemctl stop mosquitto 2>/dev/null || true
+pkill -x mosquitto 2>/dev/null || true
+sudo ss -ltnp | grep -E ':8883|:8884' || echo "8883/8884 are free"
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+mosquitto -c ../mosquitto/mosquitto-pqc.conf -v
+grep -nE 'listener|cafile|certfile|keyfile|require_certificate'   ~/post-quantum-iot-gateway/software/mosquitto/mosquitto-pqc.conf
+cd ~/post-quantum-iot-gateway/software/certs/classic
+openssl verify -CAfile ca.crt client.crt
+sudo systemctl stop mosquitto 2>/dev/null || true
+pkill -x mosquitto 2>/dev/null || true
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+OPENSSL_TRACE=state,provider,CONF,INIT mosquitto -c ../mosquitto/mosquitto-pqc.conf -v 2>&1 | tee /tmp/mosq.trace
+cd ~/post-quantum-iot-gateway/software/certs/classic
+# Re-issue client with clean v3 usage
+rm -f client.key client.csr client.crt
+openssl ecparam -name prime256v1 -genkey -noout -out client.key
+openssl req -new -key client.key -subj "/CN=pq-client-classic" -out client.csr
+cat > client_v3.cnf <<'EOF'
+[ v3_client ]
+basicConstraints = critical, CA:false
+keyUsage = critical, digitalSignature
+extendedKeyUsage = clientAuth
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid,issuer
+EOF
+
+openssl x509 -req -in client.csr   -CA ca.crt -CAkey ca.key -CAcreateserial -days 825   -extfile client_v3.cnf -extensions v3_client   -out client.crt
+openssl verify -CAfile ca.crt client.crt
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+mosquitto -c ../mosquitto/mosquitto-pqc.conf -v
+cat > ~/post-quantum-iot-gateway/software/certs/server_v3.cnf <<'EOF'
+[ v3_server ]
+basicConstraints = CA:false
+keyUsage = critical, digitalSignature, keyEncipherment, keyAgreement
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+
+[ alt_names ]
+DNS.1 = localhost
+IP.1  = 127.0.0.1
+# Add your Pi's LAN IP if you use it too, e.g.:
+# IP.2  = 192.168.4.60
+EOF
+
+# Vars
+PROVPATH="/usr/lib/aarch64-linux-gnu/ossl-modules"
+LEAF_DIR=~/post-quantum-iot-gateway/software/certs/out-ec
+CA_DIR=~/post-quantum-iot-gateway/software/certs/out
+# Fresh CSR from the existing EC server key
+cd "$LEAF_DIR"
+openssl req -new -key server.key -subj "/CN=mosquitto-server" -out server.csr
+# Sign with composite CA, include v3_server + SANs, load both providers
+openssl x509 -req -in server.csr   -CA "$CA_DIR/ca.crt" -CAkey "$CA_DIR/ca.key" -CAcreateserial   -days 825   -extfile ~/post-quantum-iot-gateway/software/certs/server_v3.cnf -extensions v3_server   -provider oqs -provider default -provider-path "$PROVPATH"   -out server.crt
+# sanity: confirm subjectAltName is present
+openssl x509 -in server.crt -noout -text | grep -A2 "Subject Alternative Name"
+sudo systemctl stop mosquitto 2>/dev/null || true
+pkill -x mosquitto 2>/dev/null || true
+sudo ss -ltnp | grep -E ':8883|:8884' || echo "8883/8884 are free"
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+mosquitto -c ../mosquitto/mosquitto-pqc.conf -v
+cd ~/post-quantum-iot-gateway
+git checkout -b feature/pqc-stable-base
+git add software/pqc_env/ software/mosquitto/ software/certs/ README.md
+git commit -m "Stable PQC MQTT base: Kyber KEM + Dilithium signatures verified, hybrid TLS1.3 operational"
+git push origin feature/pqc-stable-base
+git checkout -b feature/api-integration
+# A) Look for the framework in code
+grep -R --line-number -E "from fastapi import|FastAPI\(|from flask import|Flask\(" ~/post-quantum-iot-gateway 2>/dev/null
+# B) If FastAPI is running, /docs exists (Swagger)
+curl -I http://127.0.0.1:8000/docs | head -n 1
+# C) Check the server process name
+ps aux | egrep -i "uvicorn|gunicorn|flask" | grep -v egrep
+nano ~/post-quantum-iot-gateway/api/app.py
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+mosquitto -c ../mosquitto/mosquitto-pqc.conf -v
+nano ~/post-quantum-iot-gateway/api/app.py
+cd ~/post-quantum-iot-gateway
+source .venv/bin/activate
+source software/pqc_env/pqc_env.sh
+uvicorn api.app:app --host 0.0.0.0 --port 8000 --reload
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+sudo systemctl stop mosquitto 2>/dev/null || true
+pkill -x mosquitto 2>/dev/null || true
+mosquitto -c ../mosquitto/mosquitto-pqc.conf -v
+cat > ~/post-quantum-iot-gateway/software/certs/server_v3.cnf <<'EOF'
+[ v3_server ]
+basicConstraints = CA:false
+keyUsage = critical, digitalSignature, keyEncipherment, keyAgreement
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+
+[ alt_names ]
+DNS.1 = localhost
+IP.1  = 127.0.0.1
+IP.2  = 192.168.4.60   # your Pi’s LAN IP
+EOF
+
+cd ~/post-quantum-iot-gateway/software/certs/out-ec
+source ../../pqc_env/pqc_env.sh
+PROVPATH="/usr/lib/aarch64-linux-gnu/ossl-modules"
+CA_DIR=~/post-quantum-iot-gateway/software/certs/out
+# regenerate CSR from same key
+openssl req -new -key server.key -subj "/CN=mosquitto-server" -out server.csr
+# sign with composite CA + SAN file
+openssl x509 -req -in server.csr   -CA "$CA_DIR/ca.crt" -CAkey "$CA_DIR/ca.key" -CAcreateserial   -days 825   -extfile ~/post-quantum-iot-gateway/software/certs/server_v3.cnf -extensions v3_server   -provider oqs -provider default -provider-path "$PROVPATH"   -out server.crt
+openssl x509 -in server.crt -noout -text | grep -A2 "Subject Alternative Name"
+sudo systemctl stop mosquitto 2>/dev/null || true
+pkill -x mosquitto 2>/dev/null || true
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+mosquitto -c ../mosquitto/mosquitto-pqc.conf -v
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+# publish exactly these field names (the UI expects 'temperature' and 'humidity')
+mosquitto_pub -h localhost -p 8884 --tls-version tlsv1.3   --cafile ../certs/out/ca.crt   --cert   ../certs/classic/client.crt   --key    ../certs/classic/client.key   -t team1/sensor -m '{"temperature":24.4,"humidity":35}' -q 1
+# Terminal 1
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+sudo systemctl stop mosquitto 2>/dev/null || true
+pkill -x mosquitto 2>/dev/null || true
+mosquitto -c ../mosquitto/mosquitto-pqc.conf -v
+sudo ss -ltnp | grep -E ':8883|:8884|:8885' || echo "no MQTT listeners"
+ps aux | grep uvicorn | grep -v grep || echo "no API process"
+cd ~/post-quantum-iot-gateway
+git add api/app.py software/mosquitto/mosquitto-pqc.conf
+git commit -m "Stable PQC MQTT + FastAPI integration working; verified dashboard data flow"
+git push
+cd ~/post-quantum-iot-gateway
+git add api/app.py         software/mosquitto/mosquitto-pqc.conf         software/certs/out-ec/server.crt         software/certs/out-ec/server.csr         software/certs/server_v3.cnf         artifacts/tls/configs/server_req.cnf
+git add artifacts/mosquitto/pqc-mtls-test.conf         artifacts/tls/secure_rebuild/         scripts/demo_mtls/
+git commit -m "Stable PQC MQTT + FastAPI integration verified; updated server cert SANs, configs, and v3 CA files"
+git push --set-upstream origin feature/api-pqc-secure
+git status
+git log -1 --stat
+# Broker terminal
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+nano ../mosquitto/mosquitto-pqc.conf
+sudo systemctl stop mosquitto 2>/dev/null || true
+pkill -x mosquitto 2>/dev/null || true
+mosquitto -c ../mosquitto/mosquitto-pqc.conf -v
+cat ~/post-quantum-iot-gateway/software/certs/out/ca.crt
+cd ~/post-quantum-iot-gateway
+source .venv/bin/activate
+source software/pqc_env/pqc_env.sh
+uvicorn api.app:app --host 0.0.0.0 --port 8000 --reload
+openssl s_client -connect 127.0.0.1:8885 -tls1_2 </dev/null 2>/dev/null |   grep -E "Protocol|Cipher|Verify return code"
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+sudo systemctl stop mosquitto 2>/dev/null || true
+pkill -x mosquitto 2>/dev/null || true
+mosquitto -c ../mosquitto/mosquitto-pqc.conf -v
+cd ~/post-quantum-iot-gateway
+source .venv/bin/activate
+source software/pqc_env/pqc_env.sh
+uvicorn api.app:app --host 0.0.0.0 --port 8000 --reload
+nano ~/post-quantum-iot-gateway/software/mosquitto/mosquitto-pqc.conf
+cat ~/post-quantum-iot-gateway/software/certs/classic/ca.crt
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+sudo systemctl stop mosquitto 2>/dev/null || true
+pkill -x mosquitto 2>/dev/null || true
+mosquitto -c ../mosquitto/mosquitto-pqc.conf -v
+nano ~/post-quantum-iot-gateway/software/pqc_env/pqc_openssl.cnf
+nano ~/post-quantum-iot-gateway/software/mosquitto/mosquitto-pqc.conf
+.../erikosmundsen13/post-quantum-iot-gateway/software/mosquitto/mosquitto-pqc.conf
+use_identity_as_username true
+allow_anonymous false
+tls_version tlsv1.3
+# Logging (useful while testing)
+log_type error
+log_type warning
+log_type notice
+log_type information
+# === Arduino-friendly listener (TLS 1.3 server-auth only) ===
+listener 8885
+protocol mqtt
+cafile   /home/erikosmundsen13/post-quantum-iot-gateway/software/certs/out/ca.crt
+certfile /home/erikosmundsen13/post-quantum-iot-gateway/software/certs/out-ec/server.crt
+keyfile  /home/erikosmundsen13/post-quantum-iot-gateway/software/certs/out-ec/server.key
+# Simple credentials (replace later with ACLs if needed)
+allow_anonymous true
+require_certificate false
+tls_version tlsv1.3
+nano ~/post-quantum-iot-gateway/software/mosquitto/mosquitto-pqc.conf
+nano ~/post-quantum-iot-gateway/software/pqc_env/pqc_openssl.cnf
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+sudo systemctl stop mosquitto 2>/dev/null || true
+pkill -x mosquitto 2>/dev/null || true
+mosquitto -c ../mosquitto/mosquitto-pqc.conf -v
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+sudo systemctl stop mosquitto 2>/dev/null || true
+pkill -x mosquitto 2>/dev/null || true
+mosquitto -c ../mosquitto/mosquitto-pqc.conf -v
+# in any terminal
+sudo systemctl stop mosquitto 2>/dev/null || true
+pkill -x mosquitto 2>/dev/null || true
+sudo ss -ltnp | grep -E ':8883|:8884|:8885' || echo "ports free"
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+mosquitto -c ../mosquitto/mosquitto-pqc.conf -v
+sudo ss -ltnp | grep -E ':8883|:8884|:8885|:8000' || echo "all clear"
+nano ~/post-quantum-iot-gateway/software/mosquitto/mosquitto-pqc.conf
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+sudo systemctl stop mosquitto 2>/dev/null || true
+pkill -x mosquitto 2>/dev/null || true
+mosquitto -c ../mosquitto/mosquitto-pqc.conf -v
+ls -l ~/post-quantum-iot-gateway/software/certs/out-ec-classic
+cat > ~/post-quantum-iot-gateway/software/certs/server_v3.cnf <<'EOF'
+[ v3_server ]
+basicConstraints = CA:false
+keyUsage = critical, digitalSignature, keyEncipherment, keyAgreement
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+
+[ alt_names ]
+DNS.1 = localhost
+IP.1  = 127.0.0.1
+IP.2  = 192.168.4.60
+EOF
+
+cd ~/post-quantum-iot-gateway/software/certs
+mkdir -p out-ec-classic
+cd out-ec-classic
+# Key
+openssl ecparam -name prime256v1 -genkey -noout -out server.key
+# CSR
+openssl req -new -key server.key -subj "/CN=mosquitto-server" -out server.csr
+# Sign with the CLASSIC CA (note: this uses classic/ca.crt and classic/ca.key)
+openssl x509 -req -in server.csr   -CA ../classic/ca.crt -CAkey ../classic/ca.key -CAcreateserial   -days 825   -extfile ../server_v3.cnf -extensions v3_server   -out server.crt
+# Sanity check: ensure SANs present and signature is classical (ecdsa/sha256)
+openssl x509 -in server.crt -noout -text | grep -E "Signature Algorithm|Subject Alternative Name" -A2
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+sudo systemctl stop mosquitto 2>/dev/null || true
+pkill -x mosquitto 2>/dev/null || true
+mosquitto -c ../mosquitto/mosquitto-pqc.conf -v
+~/post-quantum-iot-gateway/software/certs/classic/ca.crt
+# 1) Check the file exists and that you can read it
+ls -l ~/post-quantum-iot-gateway/software/certs/classic/ca.crt
+# If you don't see r (read) permission, give it read perms:
+chmod a+r ~/post-quantum-iot-gateway/software/certs/classic/ca.crt
+# 2) Open or print it (use any one of these)
+cat   ~/post-quantum-iot-gateway/software/certs/classic/ca.crt
+less  ~/post-quantum-iot-gateway/software/certs/classic/ca.crt
+nano  ~/post-quantum-iot-gateway/software/certs/classic/ca.crt
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+# subscribe on 8885 (TLS 1.2, classic CA)
+mosquitto_sub -v -h 127.0.0.1 -p 8885 --tls-version tlsv1.2   --cafile ../certs/classic/ca.crt -t team1/# -q 1 &
+sleep 1
+# publish one test message to the Arduino topic
+mosquitto_pub -h 127.0.0.1 -p 8885 --tls-version tlsv1.2   --cafile ../certs/classic/ca.crt   -t team1/sensor -m '{"temperature":24.4,"humidity":35}' -q 1
+sudo systemctl status mosquitto --no-pager
+grep -nE 'listener|cafile|certfile|keyfile' /etc/mosquitto/mosquitto.conf /etc/mosquitto/conf.d/*.conf
+eriko@Battlestation MINGW64 /
+$ ssh erikosmundsen13@192.168.4.60
+Linux raspberrypi 6.12.47+rpt-rpi-v8 #1 SMP PREEMPT Debian 1:6.12.47-1+rpt1 (2025-09-16) aarch64
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Sun Nov  9 09:39:59 2025 from 192.168.4.48
+erikosmundsen13@raspberrypi:~ $ erikosmundsen13@raspberrypi:~/post-quantum-iot-gateway/software/pqc_env $ sudo systemctl status mosquitto --no-pager
+○ mosquitto.service - Mosquitto MQTT Broker
+# Terminal A (leave it open after this)
+cd ~/post-quantum-iot-gateway/software/pqc_env
+source ./pqc_env.sh
+sudo systemctl stop mosquitto 2>/dev/null || true
+pkill -x mosquitto 2>/dev/null || true
+# sanity: show the 8885 block we expect (classic CA + classic server cert + TLS1.2)
+echo "---- 8885 block ----"
+sed -n '/^listener 8885/,+12p' ../mosquitto/mosquitto-pqc.conf
+# start broker in foreground; DO NOT press Ctrl+C after this
+mosquitto -c ../mosquitto/mosquitto-pqc.conf -v
