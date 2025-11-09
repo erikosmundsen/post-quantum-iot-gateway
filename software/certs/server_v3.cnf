@@ -7,5 +7,4 @@ subjectAltName = @alt_names
 [ alt_names ]
 DNS.1 = localhost
 IP.1  = 127.0.0.1
-# Add your Pi's LAN IP if you use it too, e.g.:
-# IP.2  = 192.168.4.60
+IP.2  = 192.168.4.60   # your Pi’s LAN IP
