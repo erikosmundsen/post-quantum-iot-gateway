@@ -9,17 +9,17 @@ import paho.mqtt.client as mqtt
 from pathlib import Path
 
 #  EDIT FOR EACH MACHINE 
-BROKER = "localhost"       # or Pi IP, e.g. "192.168.1.50"
+BROKER = "192.168.4.60"       # or Pi IP, e.g. "192.168.1.50"
 PORT   = 8884
 TOPIC_FILTER = "team1/#"           # subscribe to your topics
 # CA  = "/home/peter/mqtt_certs/ca.crt"
 # CRT = "/home/peter/mqtt_certs/client.crt"
 # KEY = "/home/peter/mqtt_certs/client.key"
 
-BASE_DIR = Path(__file__).resolve().parents[1]
-CA  = BASE_DIR / "artifacts/tls/ca/ca.crt"
-CRT = BASE_DIR / "artifacts/tls/client/client.crt"
-KEY = BASE_DIR / "artifacts/tls/client/client.key"
+BASE_DIR = Path.home() / "post-quantum-iot-gateway" / "software" / "certs"
+CA  = BASE_DIR / "out" / "ca.crt"             # composite CA (server verify)
+CRT = BASE_DIR / "classic" / "client.crt"     # classic client cert (mTLS)
+KEY = BASE_DIR / "classic" / "client.key"     # classic client key
 
 # Most recent message per topic
 LATEST: Dict[str, Dict[str, Any]] = {}
@@ -73,12 +73,13 @@ def on_message(client: mqtt.Client, userdata, msg: mqtt.MQTTMessage):
         _append_history(msg.topic, ts, raw, len(msg.payload))
 
 def start_mqtt():
-    # Create a TLS client and start a blocking loop in a background thread.
     c = mqtt.Client()
 
-    context = ssl.create_default_context()
-    context.check_hostname = False
-    context.verify_mode = ssl.CERT_NONE
+    # Strict TLS verification: verify broker with composite CA + present classic client cert
+    context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH)
+    context.load_verify_locations(cafile=str(CA))
+    context.check_hostname = True
+    context.verify_mode = ssl.CERT_REQUIRED
     context.load_cert_chain(certfile=str(CRT), keyfile=str(KEY))
 
     c.tls_set_context(context)
@@ -87,6 +88,7 @@ def start_mqtt():
     c.on_message = on_message
     c.connect(BROKER, PORT, keepalive=60)
     c.loop_forever()
+
 # Spin up the MQTT subscriber
 threading.Thread(target=start_mqtt, daemon=True).start()
 # FastAPI app and end points.
