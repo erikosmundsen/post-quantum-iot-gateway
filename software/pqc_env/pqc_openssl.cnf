@@ -1,0 +1,30 @@
+openssl_conf = openssl_init
+
+[openssl_init]
+providers = provider_sect
+ssl_conf  = ssl_sect
+
+[provider_sect]
+base    = base_sect
+default = default_sect
+oqs     = oqs_sect
+
+[base_sect]
+activate = 1
+
+[default_sect]
+activate = 1
+
+[oqs_sect]
+activate = 1
+module = /usr/lib/aarch64-linux-gnu/ossl-modules/oqsprovider.so
+
+[ssl_sect]
+system_default = tls_defaults
+
+[tls_defaults]
+MinProtocol = TLSv1.3
+MaxProtocol = TLSv1.3
+CipherSuites = TLS_AES_256_GCM_SHA384
+# Use the hybrid group name your build supports; keep what you have unless we change it later
+Groups = x25519_kyber768
