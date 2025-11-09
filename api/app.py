@@ -8,24 +8,21 @@ from fastapi.responses import HTMLResponse, PlainTextResponse
 import paho.mqtt.client as mqtt
 from pathlib import Path
 
-#  EDIT FOR EACH MACHINE 
-BROKER = "192.168.4.60"       # or Pi IP, e.g. "192.168.1.50"
-PORT   = 8884
-TOPIC_FILTER = "team1/#"           # subscribe to your topics
-# CA  = "/home/peter/mqtt_certs/ca.crt"
-# CRT = "/home/peter/mqtt_certs/client.crt"
-# KEY = "/home/peter/mqtt_certs/client.key"
+# ---- Edit for each machine (these match your current Pi) ----
+BROKER = "192.168.4.60"       # or "localhost"
+PORT   = 8884                 # PQC mTLS listener
+TOPIC_FILTER = "team1/#"      # subscribe to all team1 topics
 
-BASE_DIR = Path.home() / "post-quantum-iot-gateway" / "software" / "certs"
-CA  = BASE_DIR / "out" / "ca.crt"             # composite CA (server verify)
-CRT = BASE_DIR / "classic" / "client.crt"     # classic client cert (mTLS)
-KEY = BASE_DIR / "classic" / "client.key"     # classic client key
+# PQC credentials (must be signed by the CA below)
+CA  = "/home/erikosmundsen13/post-quantum-iot-gateway/artifacts/tls/ca/ca.crt"
+CRT = "/home/erikosmundsen13/post-quantum-iot-gateway/artifacts/tls/client/api-client.crt"
+KEY = "/home/erikosmundsen13/post-quantum-iot-gateway/artifacts/tls/client/api-client.key"
+# --------------------------------------------------------------
 
 # Most recent message per topic
 LATEST: Dict[str, Dict[str, Any]] = {}
-# Rolling history per topic (last 200 points)
+# Rolling history per topic (last N points for chart)
 HISTORY: Dict[str, deque] = {}
-
 HISTORY_MAX = 200
 
 def on_connect(client: mqtt.Client, userdata, flags, rc):
@@ -42,18 +39,29 @@ def _append_history(topic: str, ts: int, payload: Dict[str, Any], size: int):
     if topic not in HISTORY:
         HISTORY[topic] = deque(maxlen=HISTORY_MAX)
     rec = {"ts": ts, "size_bytes": size}
-    # keep only numeric temp/humidity if present
     if isinstance(payload, dict):
-        if "temperature" in payload: rec["temperature"] = payload["temperature"]
-        if "humidity"    in payload: rec["humidity"]    = payload["humidity"]
+        # Accept either normalized or raw bridge fields
+        t = payload.get("temperature", payload.get("temp_c"))
+        h = payload.get("humidity",    payload.get("hum"))
+        if isinstance(t, (int, float)): rec["temperature"] = t
+        if isinstance(h, (int, float)): rec["humidity"]    = h
     HISTORY[topic].append(rec)
 
 def on_message(client: mqtt.Client, userdata, msg: mqtt.MQTTMessage):
-    # Store lates Json payload per topic.
+    # Store latest JSON payload per topic and normalize fields for charts.
     ts = int(time.time())
     try:
         text = msg.payload.decode("utf-8", errors="replace")
         data = json.loads(text)
+
+        # ---- normalize field names from device/bridge ----
+        if isinstance(data, dict):
+            if "temp_c" in data and "temperature" not in data:
+                data["temperature"] = data.get("temp_c")
+            if "hum" in data and "humidity" not in data:
+                data["humidity"] = data.get("hum")
+        # --------------------------------------------------
+
         LATEST[msg.topic] = {
             "topic": msg.topic,
             "payload": data,
@@ -73,26 +81,30 @@ def on_message(client: mqtt.Client, userdata, msg: mqtt.MQTTMessage):
         _append_history(msg.topic, ts, raw, len(msg.payload))
 
 def start_mqtt():
-    c = mqtt.Client()
+    c = mqtt.Client(client_id="api-subscriber", clean_session=True, protocol=mqtt.MQTTv311)
 
-    # Strict TLS verification: verify broker with composite CA + present classic client cert
+    # Strict TLS verification with PQC chain + present client cert (mTLS)
     context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH)
     context.load_verify_locations(cafile=str(CA))
-    context.check_hostname = True
+    context.check_hostname = True          # SAN on server cert includes IP/DNS; leave True if you reissued with SAN
     context.verify_mode = ssl.CERT_REQUIRED
     context.load_cert_chain(certfile=str(CRT), keyfile=str(KEY))
+    try:
+        context.minimum_version = ssl.TLSVersion.TLSv1_3
+    except Exception:
+        pass
 
     c.tls_set_context(context)
-
     c.on_connect = on_connect
     c.on_message = on_message
     c.connect(BROKER, PORT, keepalive=60)
     c.loop_forever()
 
-# Spin up the MQTT subscriber
+# Spin up the MQTT subscriber in background
 threading.Thread(target=start_mqtt, daemon=True).start()
-# FastAPI app and end points.
-app = FastAPI(title="Gateway API", version="1.1")
+
+# FastAPI app and endpoints.
+app = FastAPI(title="Gateway API", version="1.2")
 
 @app.get("/gateway_ok")
 def gateway_ok():
@@ -101,7 +113,7 @@ def gateway_ok():
 
 @app.get("/telemetry/latest")
 def latest_all():
-    # Latest message per topic as JSON 
+    # Latest message per topic as JSON
     return LATEST
 
 @app.get("/telemetry/by_topic")
@@ -113,12 +125,11 @@ def latest_by_topic(topic: str):
     return row
 
 @app.get("/telemetry/history")
-def history(topic: str, n: int = Query(100, ge=1, le=HISTORY_MAX)):
+def history(topic: str, n: int = Query(120, ge=1, le=HISTORY_MAX)):
     # Last n history points for a topic (for charts)
     buf = HISTORY.get(topic)
     if not buf:
         raise HTTPException(404, f"No history for topic '{topic}'")
-    # return the last n points (already time-ordered)
     return list(buf)[-n:]
 
 @app.get("/overview", response_class=PlainTextResponse)

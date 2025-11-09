@@ -1,0 +1,7 @@
+[ client_cert ]
+basicConstraints = CA:false
+keyUsage = critical, digitalSignature, keyEncipherment
+extendedKeyUsage = clientAuth
+subjectAltName = @alt
+[ alt ]
+DNS.1 = api-client
