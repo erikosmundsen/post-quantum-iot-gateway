@@ -5,9 +5,16 @@ import paho.mqtt.client as mqtt
 SERIAL_PORT = os.getenv("SERIAL_PORT", "/dev/ttyACM0")
 SERIAL_BAUD = int(os.getenv("SERIAL_BAUD", "115200"))
 MQTT_HOST   = os.getenv("MQTT_HOST", "localhost")
-MQTT_PORT   = int(os.getenv("MQTT_PORT", "8885"))
+MQTT_PORT   = int(os.getenv("MQTT_PORT", "8884"))
 MQTT_TOPIC  = os.getenv("MQTT_TOPIC", "team1/sensor")
 CAFILE      = os.getenv("MQTT_CAFILE","/etc/mosquitto/certs/classic/ca-classic-rsa.crt")
+
+MQTT_CAFILE  = os.getenv("MQTT_CAFILE",
+    "/home/erikosmundsen13/post-quantum-iot-gateway/artifacts/tls/ca/ca.crt")
+MQTT_CERT    = os.getenv("MQTT_CERT",
+    "/home/erikosmundsen13/post-quantum-iot-gateway/artifacts/tls/client/api-client.crt")
+MQTT_KEY     = os.getenv("MQTT_KEY",
+    "/home/erikosmundsen13/post-quantum-iot-gateway/artifacts/tls/client/api-client.key")
 
 running=True
 def stop(*_): 
