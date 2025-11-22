@@ -1,9 +1,33 @@
 #!/usr/bin/env bash
 set -euo pipefail
-source "$HOME/post-quantum-iot-gateway/scripts/pqc_env.sh"
-mosquitto_pub -h 127.0.0.1 -p 8883 -t "pqc/demo" -q 1 \
-  --cafile  "$HOME/post-quantum-iot-gateway/artifacts/tls/ca/ca.crt" \
-  --cert    "$HOME/post-quantum-iot-gateway/artifacts/tls/client/client.crt" \
-  --key     "$HOME/post-quantum-iot-gateway/artifacts/tls/client/client.key" \
+
+# Resolve repo root (works even if called from elsewhere)
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Load MQTT CLI config
+ENV_FILE="$REPO_ROOT/configs/mqtt_cli.env"
+if [ -f "$ENV_FILE" ]; then
+  # shellcheck disable=SC2046
+  export $(grep -v '^#' "$ENV_FILE" | xargs -d '\n')
+fi
+
+HOST="${MQTT_CLI_HOST:-localhost}"
+PORT="${MQTT_CLI_PORT:-8884}"
+TOPIC="${MQTT_CLI_TOPIC:-team1/sensor}"
+
+CA_CERT="${MQTT_CLI_CA_CERT:-$REPO_ROOT/artifacts/tls/ca/ca.crt}"
+CLIENT_CERT="${MQTT_CLI_CLIENT_CERT:-$REPO_ROOT/artifacts/tls/client/client.crt}"
+CLIENT_KEY="${MQTT_CLI_CLIENT_KEY:-$REPO_ROOT/artifacts/tls/client/client.key}"
+
+echo "Publishing to mqtts://${HOST}:${PORT}/${TOPIC}"
+echo "CA:   ${CA_CERT}"
+echo "Cert: ${CLIENT_CERT}"
+echo "Key:  ${CLIENT_KEY}"
+
+mosquitto_pub \
+  -h "$HOST" -p "$PORT" -t "$TOPIC" -q 1 \
+  --cafile "$CA_CERT" \
+  --cert "$CLIENT_CERT" \
+  --key "$CLIENT_KEY" \
   --tls-version tlsv1.3 \
   -m "Hello from PQC mTLS!"
