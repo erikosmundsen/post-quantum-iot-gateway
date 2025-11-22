@@ -7,16 +7,19 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import HTMLResponse, PlainTextResponse
 import paho.mqtt.client as mqtt
 from pathlib import Path
+import os
 
-# ---- Edit for each machine (these match your current Pi) ----
-BROKER = "192.168.4.60"       # or "localhost"
-PORT   = 8884                 # PQC mTLS listener
-TOPIC_FILTER = "team1/#"      # subscribe to all team1 topics
+# === Portable API MQTT config ===
+BROKER = os.getenv("API_MQTT_BROKER_HOST", "localhost")
+PORT = int(os.getenv("API_MQTT_BROKER_PORT", "8884"))
+TOPIC_FILTER = os.getenv("API_MQTT_TOPIC_FILTER", "team1/#")
 
-# PQC credentials (must be signed by the CA below)
-CA  = "/home/erikosmundsen13/post-quantum-iot-gateway/artifacts/tls/ca/ca.crt"
-CRT = "/home/erikosmundsen13/post-quantum-iot-gateway/artifacts/tls/client/api-client.crt"
-KEY = "/home/erikosmundsen13/post-quantum-iot-gateway/artifacts/tls/client/api-client.key"
+CA = os.getenv("API_MQTT_CA_CERT")
+CRT = os.getenv("API_MQTT_CLIENT_CERT")
+KEY = os.getenv("API_MQTT_CLIENT_KEY")
+
+CLIENT_ID = os.getenv("API_MQTT_CLIENT_ID", "api-subscriber")
+
 # --------------------------------------------------------------
 
 # Most recent message per topic
