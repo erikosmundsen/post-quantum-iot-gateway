@@ -14,6 +14,87 @@ One of the main ideas in this project is portability. Hardcoded file paths and a
 
 Although this is a research prototype, it provides a realistic experience. Real sensors are read. Real MQTT traffic moves through the system. A real broker enforces strong security policies, and the data appears on a real dashboard. The value of this project is that it shows the full shape of an IoT gateway that is built with tomorrow in mind, not yesterday.
 
+## Quick Start
+
+If you are setting up this gateway on your own Raspberry Pi, these steps will take you from a clean clone to a working system without scrolling through the entire document.
+
+1. Clone the repository:
+
+    ```
+    git clone https://github.com/erikosmundsen/post-quantum-iot-gateway.git
+    cd post-quantum-iot-gateway
+    git checkout feature/portability-pi
+    ```
+    
+2. Copy the example configuration files into place:
+
+    ```
+    cp configs/mosquitto_pqc.env.example configs/mosquitto_pqc.env
+    cp configs/api_portable.env.example configs/api_portable.env
+    cp configs/sensor_portable.env.example configs/sensor_portable.env
+    cp configs/mqtt_cli.env.example configs/mqtt_cli.env
+    cp software/serial_bridge/serial_portable.env.example software/serial_bridge/serial_portable.env
+    ```
+    
+3. Open each `.env` file and replace `<your-user>` with your actual username.  
+   Make sure the certificate paths and serial device paths match your Pi.
+
+4. Run the setup script:
+
+    ```
+    ./scripts/setup_gateway.sh
+    ```
+    
+   This script checks your environment, confirms the post quantum OpenSSL installation, and generates the PQC Mosquitto configuration in the `build` folder.
+
+5. Install the Mosquitto configuration:
+
+    ```
+    sudo cp build/pqc_mtls.conf /etc/mosquitto/conf.d/pqc_mtls.conf
+    sudo systemctl restart mosquito
+    ```
+
+6. Start the FastAPI backend:
+
+    ```
+    export $(grep -v '^#' configs/api_portable.env | xargs -d '\n')
+    python3 -m uvicorn api.app:app --host 0.0.0.0 --port 8000
+    ```
+    
+   Open the dashboard at:
+
+   ```
+    http://<your-pi-ip>:8000/dashboard
+   ```
+   
+7. Start one or both sensor nodes:
+
+    DHT sensor, directly on Pi:
+   
+   ```
+    ./scripts/run_dht11_portable.sh
+   ```
+
+   Arduino node with DHT sensor thru serial connection (USB):
+   
+   ```
+    ./scripts/run_serial_portable.sh  
+   ```
+   
+   If everything is wired and configured correctly, the readings will appear in the dashboard.
+
+9. Test the secure MQTT connection with the CLI tools:
+
+    ```
+    ./scripts/pqc_sub.sh  
+    ./scripts/pqc_pub.sh  
+    ```
+    
+   If the subscriber prints the test message, the post quantum mutual TLS handshake is working.
+
+Once these steps are complete, your gateway is online. You can read the rest of this README for a deeper explanation of the architecture and security model.
+
+
 ## System Architecture
 
 This system is small enough to understand in one sitting, but it contains all the major parts of a modern IoT gateway. The design is built from the ground up to be approachable, while still reflecting real engineering decisions used in production environments.
