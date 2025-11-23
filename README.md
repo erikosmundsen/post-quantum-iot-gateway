@@ -51,7 +51,7 @@ If you are setting up this gateway on your own Raspberry Pi, these steps will ta
 
     ```
     sudo cp build/pqc_mtls.conf /etc/mosquitto/conf.d/pqc_mtls.conf
-    sudo systemctl restart mosquito
+    sudo systemctl restart mosquitto
     ```
 
 6. Start the FastAPI backend:
