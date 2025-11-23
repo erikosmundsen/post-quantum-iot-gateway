@@ -57,13 +57,15 @@ If you are setting up this gateway on your own Raspberry Pi, these steps will ta
 
 6. Flash the Arduino or ESP32 (if using the serial node)
 
-The firmware is located in:
+    The firmware is located in:
 
-firmware/arduino_dht_sensor/arduino_dht_sensor.ino
-
-Open it in the Arduino IDE and upload it to your board.  
-The sensor should be wired with the DATA pin on D2.  
-Once flashed, connect the board to the Pi with USB.
+    ```
+    firmware/arduino_dht_sensor/arduino_dht_sensor.ino
+    ```
+    
+    Open it in the Arduino IDE and upload it to your board.  
+    The sensor should be wired with the DATA pin on D2.  
+    Once flashed, connect the board to the Pi with USB.
 
 7. Start the FastAPI backend:
 
