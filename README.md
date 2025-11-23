@@ -256,3 +256,192 @@ These two nodes highlight two sides of real IoT systems.
 - The USB serial node represents sensors running on independent microcontrollers. These devices may not have the ability to run TLS, manage certificates, or speak MQTT. The gateway takes care of all of that, turning a simple serial feed into a fully authenticated post-quantum-secure MQTT message.
 
 Both nodes ultimately publish readings to the same MQTT topic. The API backend normalizes the data from either source so the dashboard does not need to know which device sent each reading. This gives the project flexibility and demonstrates how IoT gateways unify different classes of hardware under a single, secure ingestion pipeline.
+
+## Running the Gateway
+
+Once the system is installed and the configuration files are filled out, starting the gateway is straightforward. Each major part of the system runs in its own terminal so you can see what is happening and confirm that messages are moving through the pipeline.
+
+This section explains the recommended order for starting the PQC Mosquitto broker, the FastAPI backend, and whichever sensor nodes you want to use. You can run only one node or both at the same time.
+
+### 1. Start the PQC Mosquitto Broker
+
+Before running anything else, make sure the broker is using the PQC configuration that was generated in the installation step.
+
+Install the generated config file:
+
+```
+sudo cp build/pqc_mtls.conf /etc/mosquitto/conf.d/pqc_mtls.conf
+sudo systemctl restart mosquitto
+```
+
+Check if Mosquitto is running:
+
+```
+sudo systemctl status mosquitto
+```
+
+You should see something like “active (running)” near the top.
+
+Verify that the broker is listening on the PQC port:
+
+```
+sudo ss -tlnp | grep 8884
+```
+
+If you see Mosquitto holding port 8884, the broker is ready.
+
+### 2. Start the FastAPI Backend and Dashboard
+
+Open a new terminal on the Pi.
+Move into the project directory:
+
+```
+cd ~/post-quantum-iot-gateway
+```
+
+Load the API environment file:
+
+```
+export $(grep -v '^#' configs/api_portable.env | xargs -d '\n')
+
+```
+
+Start the FastAPI backend and dashboard:
+
+```
+python3 -m uvicorn api.app:app --host 0.0.0.0 --port 8000
+```
+
+You should see output indicating that Uvicorn is running and that the API successfully connected to the MQTT broker.
+
+Open the dashboard in your browser:
+
+```
+http://<your-pi-ip>:8000/dashboard
+```
+
+Replace <your-pi-ip> with your Pi’s address.
+You should now see an empty dashboard waiting for sensor data.
+
+### 3. Start the Sensor Nodes
+
+The gateway can run with either of the following sensors or both at the same time.
+
+#### A. Pi-based DHT11 Node
+
+Make sure your DHT11 is wired correctly:
+- VCC to 3.3V
+- GND to Ground
+- DATA to GPIO 4
+- 10 kΩ resistor between DATA and VCC (If using DHT11. DHT22 has pull-up resistor already installed.)
+
+Then run:
+
+```
+./scripts/run_dht11_portable.sh
+```
+
+If everything is correct, the script will print readings like:
+
+```
+Publishing: {"temperature": 23.1, "humidity": 38}
+```
+
+The dashboard will update in real time.
+
+#### B. Serial Bridge Node (Arduino or ESP32)
+
+For this project, the microcontroller reads its own sensor locally and then sends JSON messages over USB to the Raspberry Pi. The Pi does not interact with the sensor’s pins directly. It only handles the USB serial link.
+
+Microcontroller Sensor Wiring:
+
+- VCC to 3.3V
+- GND to Ground
+- DATA to Digital Pin 2
+- 10 kΩ resistor between DATA and VCC (If using DHT11. DHT22 has pull-up resistor already installed.)
+
+Here is the wiring for a typical Arduino or ESP32 with a D
+Make sure your microcontroller is connected to the Pi over USB.
+Most boards appear as /dev/ttyACM0.
+
+Connection to the Raspberry Pi:
+- Microcontroller USB port to Raspberry Pi USB port, using a regular USB cable
+- When connected, the microcontroller usually appears as:
+    - /dev/ttyACM0 for Arduino Uno, Nano (ATmega32U4-based models), or some ESP32 boards
+    - /dev/ttyUSB0 for CH340 or CP2102 USB-to-serial chips
+ 
+You can confirm the correct device path with:
+
+```
+ls /dev/ttyACM* /dev/ttyUSB* 2>/dev/null
+```
+
+Once that device path is known, set it in:
+
+```
+software/serial_bridge/serial_portable.env
+```
+
+Check that your environment file matches the correct device path:
+
+```
+software/serial_bridge/serial_portable.env
+```
+
+Example:
+
+```
+SERIAL_DEVICE=/dev/ttyACM0
+SERIAL_BAUD=9600
+```
+
+After that, the microcontroller can be started using:
+
+```
+./scripts/run_serial_portable.sh
+```
+
+The Pi will open the serial port, read each JSON line that the microcontroller prints, normalize the fields, and publish the reading to your PQC-secured MQTT broker exactly like the DHT11 node.
+
+### 4. Test the Gateway With the Portable CLI Tools
+
+These tools are useful for verifying PQC mTLS behavior without sensor hardware.
+
+Subscriber:
+
+```
+./scripts/pqc_sub.sh
+```
+
+Publisher:
+
+```
+./scripts/pqc_pub.sh
+```
+
+If everything is correct, the subscriber terminal will print:
+
+```
+Hello from PQC mTLS!
+```
+
+This means the post quantum mutual TLS handshake succeeded.
+
+### 5. Stopping and Restarting the Gateway
+
+You can stop each part with Ctrl + C in its terminal.
+To stop Mosquitto:
+
+```
+sudo systemctl stop mosquitto
+```
+
+To restart the entire system:
+
+Start Mosquitto
+
+Start the API
+
+Start whichever sensor nodes you want to test
+
+The system does not require any special shutdown procedure.
