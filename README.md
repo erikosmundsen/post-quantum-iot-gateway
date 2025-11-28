@@ -92,7 +92,7 @@ First to install system dependencies:
 8. Compile Mosquitto with the custom OpenSSL:
 
    ```
-   mmake WITH_TLS=yes \
+   make WITH_TLS=yes \
     OPENSSL_INCLUDE_DIR=/opt/openssl-3/include \
     OPENSSL_LIB_DIR=/opt/openssl-3/lib \
     -j$(nproc)
