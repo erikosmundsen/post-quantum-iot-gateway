@@ -82,7 +82,55 @@ If these are present, your Pi is fully PQC-ready.
 3. Open each `.env` file and replace `<your-user>` with your actual username.  
    Make sure the certificate paths and serial device paths match your Pi.
 
-4. Run the setup script:
+## C. Generate TLS Certificates
+
+If this is your first time setting up the gateway, you must generate a CA, server certificate, and client certificate.
+
+Run inside the repo:
+
+```
+cd ~/post-quantum-iot-gateway
+
+mkdir -p artifacts/tls/ca artifacts/tls/server artifacts/tls/client
+
+# ---- Create CA ----
+openssl genrsa -out artifacts/tls/ca/ca.key 4096
+openssl req -x509 -new -nodes -key artifacts/tls/ca/ca.key \
+  -sha256 -days 3650 -out artifacts/tls/ca/ca.crt \
+  -subj "/CN=pqc-gateway-ca"
+
+# ---- Server certificate ----
+openssl genrsa -out artifacts/tls/server/server.key 4096
+openssl req -new -key artifacts/tls/server/server.key \
+  -out artifacts/tls/server/server.csr \
+  -subj "/CN=localhost"
+
+openssl x509 -req \
+  -in artifacts/tls/server/server.csr \
+  -CA artifacts/tls/ca/ca.crt \
+  -CAkey artifacts/tls/ca/ca.key \
+  -CAcreateserial \
+  -out artifacts/tls/server/server.crt \
+  -days 365 -sha256
+
+# ---- Client certificate ----
+openssl genrsa -out artifacts/tls/client/client.key 4096
+openssl req -new -key artifacts/tls/client/client.key \
+  -out artifacts/tls/client/client.csr \
+  -subj "/CN=pqc-client"
+
+openssl x509 -req \
+  -in artifacts/tls/client/client.csr \
+  -CA artifacts/tls/ca/ca.crt \
+  -CAkey artifacts/tls/ca/ca.key \
+  -CAcreateserial \
+  -out artifacts/tls/client/client.crt \
+  -days 365 -sha256
+```
+
+## D. Configure Mosquitto with PQC TLS
+
+1. Run the setup script:
 
     ```
     ./scripts/setup_gateway.sh
@@ -90,15 +138,16 @@ If these are present, your Pi is fully PQC-ready.
     
    This script checks your environment, confirms the post quantum OpenSSL installation, and generates the PQC Mosquitto configuration in the `build` folder.
 
-5. Install the Mosquitto configuration:
+2. Install PQC Mosquitto configuration:
 
     ```
     sudo cp build/pqc_mtls.conf /etc/mosquitto/conf.d/pqc_mtls.conf
     sudo systemctl restart mosquitto
     ```
 
+## E. Start Backend and Sensors
 
-6. Flash the Arduino or ESP32 (if using the serial node)
+1. Flash the Arduino or ESP32 (if using the serial node)
 
     The firmware is located in:
 
@@ -110,7 +159,7 @@ If these are present, your Pi is fully PQC-ready.
     The sensor should be wired with the DATA pin on D2.  
     Once flashed, connect the board to the Pi with USB.
 
-7. Start the FastAPI backend:
+2. Start the FastAPI backend:
 
     ```
     export $(grep -v '^#' configs/api_portable.env | xargs -d '\n')
@@ -123,7 +172,7 @@ If these are present, your Pi is fully PQC-ready.
     http://<your-pi-ip>:8000/dashboard
    ```
    
-8. Start one or both sensor nodes:
+3. Start one or both sensor nodes:
 
     DHT sensor, directly on Pi:
    
@@ -139,7 +188,9 @@ If these are present, your Pi is fully PQC-ready.
    
    If everything is wired and configured correctly, the readings will appear in the dashboard.
 
-9. Test the secure MQTT connection with the CLI tools:
+## F. Test PQC-secure MQTT communication
+
+1. Test the secure MQTT connection with the CLI tools:
 
     ```
     ./scripts/pqc_sub.sh  
