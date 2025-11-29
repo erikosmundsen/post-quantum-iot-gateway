@@ -16,113 +16,50 @@ Although this is a research prototype, it provides a realistic experience. Real 
 
 ## Quick Start
 
-If you are setting up this gateway on your own Raspberry Pi, these steps will take you from a clean clone to a working system without scrolling through the entire document.
+If you are setting up this gateway on your own Raspberry Pi, these steps take you from a clean clone to a working post-quantum IoT system using OpenSSL 3.5.x with built-in NIST PQC, without building any custom crypto libraries.
 
-First to install system dependencies:
+### A. Prepare the Raspberry Pi
 
-1. Run these commands on Raspberry Pi OS 64-bit:
+1. Install System Dependencies
+
+Run on Raspberry Pi OS (64-bit):
+   ```
+   sudo apt update
+   sudo apt install -y \
+    python3 python3-pip python3-venv \
+    mosquitto mosquitto-clients \
+    build-essential git
 
    ```
-   sudo apt-get update
-    sudo apt-get install -y build-essential cmake ninja-build git \
-        python3 python3-pip python3-venv pkg-config libssl-dev \
-        libtool autoconf automake mosquitto mosquitto-clients
-   ```
 
-2. Build and install liboqs
+This installs:
+- Mosquitto (linked to OpenSSL 3.5.x)
+- Python + pip
+- MQTT CLI tools
+- No custom OpenSSL or liboqs builds required
 
-   ```
-   cd ~
-    git clone https://github.com/open-quantum-safe/liboqs.git
-    cd liboqs
-    mkdir build && cd build
-    cmake -GNinja .. -DOQS_USE_OPENSSL=OFF -DOQS_BUILD_ONLY_LIB=ON
-    ninja
-    sudo ninja install
-    sudo ldconfig
-    ```
+2. Verify PQC Support
 
-3. Verify installation:
+Confirm that your system OpenSSL includes NIST PQC KEMs/signatures and hybrid TLS groups:
 
    ```
-   ls /usr/local/lib | grep oqs
+   openssl version -a
+   openssl list -kem-algorithms | grep -i MLKEM
+   openssl list -signature-algorithms | grep -i MLDSA
+   openssl list -groups | egrep -i 'MLKEM|X25519MLKEM'
    ```
 
-4. Configure the build:
+You should see values like:
 
-    ```
-    cd ~
-    git clone --branch OQS-OpenSSL_3_2_1-stable https://github.com/open-quantum-safe/openssl oqs-openssl
-    cd oqs-openssl
+```
+   MLKEM768
+   MLDSA65
+   X25519MLKEM768
+```
 
-    ./Configure linux-aarch64 \
-        --prefix=/opt/openssl-3 \
-        --openssldir=/opt/openssl-3 \
-        enable-ec_nistp_64_gcc_128
-    ```
-   
-5. Build and install:
+If these are present, your Pi is fully PQC-ready.
 
-    ```
-    make -j$(nproc)
-    sudo make install
-    sudo ldconfig
-    ```
-    
-6. Verify OQS provider
-
-   ```
-   /opt/openssl-3/bin/openssl list -providers
-   ```
-
-   You should see:
-
-   ```
-   provider: oqsprovider
-   ```
-   
-7. Build Mosquitto using the PQC OpenSSL stack
-
-   ```
-   cd ~
-   git clone https://github.com/eclipse/mosquitto.git
-   cd mosquitto
-   ```
-
-8. Compile Mosquitto with the custom OpenSSL:
-
-   ```
-   make WITH_TLS=yes \
-    OPENSSL_INCLUDE_DIR=/opt/openssl-3/include \
-    OPENSSL_LIB_DIR=/opt/openssl-3/lib \
-    -j$(nproc)
-   ```
-
-9.  Install:
-    
-    ```
-    sudo make install
-    sudo ldconfig
-     ```
-    
-10. Ensure Mosquitto loads the PQC OpenSSL libraries
-
-    ```
-    sudo mkdir -p /etc/environment.d
-    echo 'LD_LIBRARY_PATH=/opt/openssl-3/lib' | sudo tee /etc/environment.d/openssl-pqc.conf
-    ```
-11. Restart Mosquitto:
-
-    ```
-    sudo systemctl restart mosquitto
-    ```
-12. Verify Mosquitto is using the custom OpenSSL:
-
-    ```
-    mosquitto -v | grep OpenSSL
-    ```
-
-Now to get the Gateway installed:
+### B. Install the Gateway
 
 1. Clone the repository:
 
