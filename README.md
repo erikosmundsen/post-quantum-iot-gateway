@@ -82,7 +82,7 @@ If these are present, your Pi is fully PQC-ready.
 3. Open each `.env` file and replace `<your-user>` with your actual username.  
    Make sure the certificate paths and serial device paths match your Pi.
 
-## C. Generate TLS Certificates
+### C. Generate TLS Certificates
 
 If this is your first time setting up the gateway, you must generate a CA, server certificate, and client certificate.
 
@@ -128,7 +128,7 @@ openssl x509 -req \
   -days 365 -sha256
 ```
 
-## D. Configure Mosquitto with PQC TLS
+### D. Configure Mosquitto with PQC TLS
 
 1. Run the setup script:
 
@@ -145,7 +145,7 @@ openssl x509 -req \
     sudo systemctl restart mosquitto
     ```
 
-## E. Start Backend and Sensors
+### E. Start Backend and Sensors
 
 1. Flash the Arduino or ESP32 (if using the serial node)
 
@@ -188,7 +188,7 @@ openssl x509 -req \
    
    If everything is wired and configured correctly, the readings will appear in the dashboard.
 
-## F. Test PQC-secure MQTT communication
+### F. Test PQC-secure MQTT communication
 
 1. Test the secure MQTT connection with the CLI tools:
 
